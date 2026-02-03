@@ -20,6 +20,13 @@ if "%VERSION%"=="" (
 
 if "%MESSAGE%"=="" set MESSAGE=Release %VERSION%
 
+:: Ensure tag uses v* so GitHub Actions trigger on tag push
+echo %VERSION% | findstr /b /i "v" >nul
+if errorlevel 1 (
+    set VERSION=v%VERSION%
+    echo [INFO] Version adjusted to %VERSION% to match tag trigger (v*)
+)
+
 echo [INFO] Preparing release: %VERSION%
 echo [INFO] Commit message: %MESSAGE%
 echo.
@@ -56,7 +63,12 @@ echo.
 
 :: Push code
 echo [RUN] Pushing code to remote...
-git push origin master
+for /f %%B in ('git rev-parse --abbrev-ref HEAD') do set CURRENT_BRANCH=%%B
+if "%CURRENT_BRANCH%"=="HEAD" (
+    echo [ERROR] Detached HEAD. Please checkout a branch before release.
+    exit /b 1
+)
+git push -u origin %CURRENT_BRANCH%
 if errorlevel 1 (
     echo [ERROR] Push failed
     exit /b 1
@@ -93,6 +105,11 @@ if !errorlevel!==0 (
             exit /b 1
         )
         set VERSION=!NEW_VERSION!
+        echo !VERSION! | findstr /b /i "v" >nul
+        if errorlevel 1 (
+            set VERSION=v!VERSION!
+            echo [INFO] Version adjusted to !VERSION! to match tag trigger (v*)
+        )
         echo [INFO] Using new version: !VERSION!
     ) else (
         echo [CANCEL] Keeping old tag, release cancelled
