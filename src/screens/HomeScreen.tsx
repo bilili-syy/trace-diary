@@ -9,17 +9,20 @@ import {
   TextInput,
   ScrollView,
   Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
 import { DiaryCard } from '../components';
 import { useDiary } from '../context';
 import { useTheme } from '../context/ThemeProvider';
 import { Layout, MOOD_OPTIONS, WEATHER_OPTIONS } from '../constants';
-import { RootStackParamList, DiaryEntry } from '../types';
+import { RootStackParamList, MainTabParamList, DiaryEntry } from '../types';
 import { formatDateDisplay } from '../utils/dateUtils';
+import { getOnboardingDone, setOnboardingDone } from '../api/storage';
 
 interface FilterState {
   mood: string | null;
@@ -27,16 +30,20 @@ interface FilterState {
   tag: string | null;
 }
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 export function HomeScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { state, getThisDayLastYearEntries, deleteEntry } = useDiary();
   const { colors, isDark } = useTheme();
-  const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>({ mood: null, weather: null, tag: null });
+  const [showOnboarding, setShowOnboarding] = useState(() => !getOnboardingDone());
+  const [onboardingStep, setOnboardingStep] = useState(0);
 
   const thisDayEntries = useMemo(() => {
     return getThisDayLastYearEntries();
@@ -51,6 +58,7 @@ export function HomeScreen() {
   }, [state.entries]);
 
   const hasActiveFilters = filters.mood || filters.weather || filters.tag;
+  const shouldShowFilters = showFilters || !!hasActiveFilters;
 
   const filteredEntries = useMemo(() => {
     let entries = state.entries;
@@ -80,6 +88,40 @@ export function HomeScreen() {
 
   const clearFilters = () => {
     setFilters({ mood: null, weather: null, tag: null });
+  };
+
+  const onboardingSteps = useMemo(() => ([
+    {
+      title: '隐私承诺',
+      description: '所有日记只保存在本地设备，不上传服务器。请放心记录真实的自己。',
+      actionLabel: null as string | null,
+      action: null as (() => void) | null,
+    },
+    {
+      title: '设置应用锁',
+      description: '建议开启 PIN + 生物识别，防止他人查看你的日记。',
+      actionLabel: '去设置',
+      action: () => {
+        setOnboardingDone(true);
+        setShowOnboarding(false);
+        navigation.navigate('Settings', { open: 'appLock' });
+      },
+    },
+    {
+      title: '个性化体验',
+      description: '选择喜欢的主题配色，并设置每天的写作提醒。',
+      actionLabel: '设置主题/提醒',
+      action: () => {
+        setOnboardingDone(true);
+        setShowOnboarding(false);
+        navigation.navigate('Settings', { open: 'theme' });
+      },
+    },
+  ]), [navigation]);
+
+  const completeOnboarding = () => {
+    setOnboardingDone(true);
+    setShowOnboarding(false);
   };
 
   const handleCardPress = useCallback((entry: DiaryEntry) => {
@@ -229,48 +271,38 @@ export function HomeScreen() {
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
       
       <View style={styles.header}>
-        {isSearching ? (
-          <View style={styles.searchRow}>
-            <View style={[styles.searchContainer, { backgroundColor: colors.cardBackground }]}>
-              <Feather name="search" size={20} color={colors.textMuted} style={styles.searchIcon} />
-              <TextInput
-                style={[styles.searchInput, { color: colors.textPrimary }]}
-                placeholder="搜索日记内容..."
-                placeholderTextColor={colors.textMuted}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoFocus
-              />
-              <TouchableOpacity 
-                onPress={() => { setIsSearching(false); setSearchQuery(''); setShowFilters(false); clearFilters(); }}
-                style={styles.searchCloseButton}
-              >
-                <Feather name="x" size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity 
-              style={[styles.filterButton, { backgroundColor: hasActiveFilters ? colors.primary : colors.cardBackground }]}
-              onPress={() => setShowFilters(!showFilters)}
-            >
-              <Feather name="filter" size={20} color={hasActiveFilters ? '#FFF' : colors.textPrimary} />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <>
-            <View>
-              <Text style={[styles.greeting, { color: colors.textPrimary }]}>素履</Text>
-              <Text style={[styles.date, { color: colors.textSecondary }]}>{formatDateDisplay(new Date())}</Text>
-            </View>
-            <TouchableOpacity 
-              style={[styles.searchButton, { backgroundColor: colors.cardBackground }]}
-              onPress={() => setIsSearching(true)}
-            >
-              <Feather name="search" size={22} color={colors.textPrimary} />
-            </TouchableOpacity>
-          </>
-        )}
+        <View>
+          <Text style={[styles.greeting, { color: colors.textPrimary }]}>素履</Text>
+          <Text style={[styles.date, { color: colors.textSecondary }]}>{formatDateDisplay(new Date())}</Text>
+        </View>
       </View>
-      {showFilters && isSearching && renderFilters()}
+      <View style={styles.searchRow}>
+        <View style={[styles.searchContainer, { backgroundColor: colors.cardBackground }]}>
+          <Feather name="search" size={20} color={colors.textMuted} style={styles.searchIcon} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.textPrimary }]}
+            placeholder="搜索日记内容..."
+            placeholderTextColor={colors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity 
+              onPress={() => setSearchQuery('')}
+              style={styles.searchCloseButton}
+            >
+              <Feather name="x" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          )}
+        </View>
+        <TouchableOpacity 
+          style={[styles.filterButton, { backgroundColor: hasActiveFilters ? colors.primary : colors.cardBackground }]}
+          onPress={() => setShowFilters(!showFilters)}
+        >
+          <Feather name="filter" size={20} color={hasActiveFilters ? '#FFF' : colors.textPrimary} />
+        </TouchableOpacity>
+      </View>
+      {shouldShowFilters && renderFilters()}
 
       {state.entries.length === 0 ? (
         renderEmptyState()
@@ -279,9 +311,9 @@ export function HomeScreen() {
           data={filteredEntries}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          ListHeaderComponent={isSearching ? null : renderThisDaySection}
+          ListHeaderComponent={!searchQuery && !hasActiveFilters ? renderThisDaySection : null}
           ListEmptyComponent={
-            isSearching ? (
+            searchQuery || hasActiveFilters ? (
               <View style={styles.noResultContainer}>
                 <Text style={[styles.noResultText, { color: colors.textMuted }]}>未找到相关日记</Text>
               </View>
@@ -291,6 +323,68 @@ export function HomeScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      <Modal visible={showOnboarding} animationType="slide" transparent onRequestClose={completeOnboarding}>
+        <View style={styles.onboardingOverlay}>
+          <View style={[styles.onboardingCard, { backgroundColor: colors.cardBackground }]}>
+            <View style={styles.onboardingHeader}>
+              <Text style={[styles.onboardingTitle, { color: colors.textPrimary }]}>新手引导</Text>
+              <TouchableOpacity onPress={completeOnboarding}>
+                <Text style={[styles.onboardingSkip, { color: colors.textSecondary }]}>跳过</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.onboardingProgress}>
+              {onboardingSteps.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.onboardingDot,
+                    { backgroundColor: index === onboardingStep ? colors.primary : colors.divider },
+                  ]}
+                />
+              ))}
+            </View>
+            <Text style={[styles.onboardingStepTitle, { color: colors.textPrimary }]}>
+              {onboardingSteps[onboardingStep].title}
+            </Text>
+            <Text style={[styles.onboardingStepDesc, { color: colors.textSecondary }]}>
+              {onboardingSteps[onboardingStep].description}
+            </Text>
+            {onboardingSteps[onboardingStep].action && onboardingSteps[onboardingStep].actionLabel && (
+              <TouchableOpacity
+                style={[styles.onboardingAction, { backgroundColor: colors.primary }]}
+                onPress={onboardingSteps[onboardingStep].action!}
+              >
+                <Text style={styles.onboardingActionText}>{onboardingSteps[onboardingStep].actionLabel}</Text>
+              </TouchableOpacity>
+            )}
+            <View style={styles.onboardingFooter}>
+              <TouchableOpacity
+                style={[styles.onboardingNavButton, { backgroundColor: colors.inputBackground }]}
+                onPress={() => setOnboardingStep((prev) => Math.max(prev - 1, 0))}
+                disabled={onboardingStep === 0}
+              >
+                <Text style={[styles.onboardingNavText, { color: colors.textSecondary }]}>上一步</Text>
+              </TouchableOpacity>
+              {onboardingStep < onboardingSteps.length - 1 ? (
+                <TouchableOpacity
+                  style={[styles.onboardingNavButton, { backgroundColor: colors.primary }]}
+                  onPress={() => setOnboardingStep((prev) => Math.min(prev + 1, onboardingSteps.length - 1))}
+                >
+                  <Text style={styles.onboardingNavTextPrimary}>下一步</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.onboardingNavButton, { backgroundColor: colors.primary }]}
+                  onPress={completeOnboarding}
+                >
+                  <Text style={styles.onboardingNavTextPrimary}>完成</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -346,10 +440,11 @@ const styles = StyleSheet.create({
     padding: Layout.spacing.xs,
   },
   searchRow: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Layout.spacing.sm,
+    paddingHorizontal: Layout.spacing.md,
+    paddingBottom: Layout.spacing.sm,
   },
   filterButton: {
     width: 44,
@@ -408,6 +503,80 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 100,
+  },
+  onboardingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  onboardingCard: {
+    borderTopLeftRadius: Layout.borderRadius.lg,
+    borderTopRightRadius: Layout.borderRadius.lg,
+    padding: Layout.spacing.lg,
+    paddingBottom: Layout.spacing.xl,
+  },
+  onboardingHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Layout.spacing.md,
+  },
+  onboardingTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  onboardingSkip: {
+    fontSize: 14,
+  },
+  onboardingProgress: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: Layout.spacing.md,
+  },
+  onboardingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  onboardingStepTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: Layout.spacing.sm,
+  },
+  onboardingStepDesc: {
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: Layout.spacing.lg,
+  },
+  onboardingAction: {
+    paddingVertical: Layout.spacing.md,
+    borderRadius: Layout.borderRadius.md,
+    alignItems: 'center',
+    marginBottom: Layout.spacing.lg,
+  },
+  onboardingActionText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  onboardingFooter: {
+    flexDirection: 'row',
+    gap: Layout.spacing.sm,
+  },
+  onboardingNavButton: {
+    flex: 1,
+    paddingVertical: Layout.spacing.md,
+    borderRadius: Layout.borderRadius.md,
+    alignItems: 'center',
+  },
+  onboardingNavText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  onboardingNavTextPrimary: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   thisDayCard: {
     marginHorizontal: Layout.spacing.md,

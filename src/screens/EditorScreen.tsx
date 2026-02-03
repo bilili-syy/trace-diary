@@ -19,15 +19,16 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { MoodPicker, WeatherPicker, TemplateModal, MarkdownPreview } from '../components';
 import { useDiary } from '../context';
 import { useTheme } from '../context/ThemeProvider';
 import { useDebounce } from '../hooks';
-import { Layout, DIARY_TEMPLATES } from '../constants';
+import { Layout } from '../constants';
 import { RootStackParamList, DiaryEntry, DiaryTemplate } from '../types';
-import { formatDateId, formatDateDisplay, countWords } from '../utils/dateUtils';
-import { saveImage, deleteImage, getImageUri } from '../utils/imageStorage';
-import { saveDraft, getDraft, clearDraft, DraftData } from '../api/storage';
+import { formatDateId, formatDateDisplay, formatTime, countWords } from '../utils/dateUtils';
+import { saveImage, deleteImages, getImageUri } from '../utils/imageStorage';
+import { saveDraft, getDraft, clearDraft } from '../api/storage';
 
 const MAX_IMAGES = 9;
 
@@ -61,18 +62,23 @@ interface HistoryState {
 export function EditorScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<EditorRouteProp>();
-  const { getEntryById, addEntry, updateEntry } = useDiary();
+  const { getEntryById, addEntry, updateEntry, deleteEntry } = useDiary();
   const { colors, isDark } = useTheme();
 
   const entryId = route.params?.entryId;
   const dateParam = route.params?.date;
   const initialDate = dateParam || formatDateId(new Date());
+  const [draftOnlyMode, setDraftOnlyMode] = useState(route.params?.draftOnly ?? false);
+  const [ignoreExistingEntry, setIgnoreExistingEntry] = useState(false);
+  const [conflictChecked, setConflictChecked] = useState(false);
   
   const existingEntryById = entryId ? getEntryById(entryId) : null;
   const existingEntryByDate = !entryId ? getEntryById(initialDate) : null;
-  const existingEntry = existingEntryById || existingEntryByDate;
+  const existingEntry = entryId
+    ? existingEntryById
+    : (draftOnlyMode || ignoreExistingEntry ? null : existingEntryByDate);
   
-  const isEditing = !!existingEntry;
+  const isEditing = !!existingEntry && !draftOnlyMode;
   const diaryId = entryId || initialDate;
 
   const [content, setContent] = useState(existingEntry?.content || '');
@@ -85,10 +91,14 @@ export function EditorScreen() {
   const [showTagModal, setShowTagModal] = useState(false);
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [writingMode, setWritingMode] = useState(false);
+  const [showSortModal, setShowSortModal] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingDeleteImages, setPendingDeleteImages] = useState<string[]>([]);
   const pendingTemplateRef = useRef<DiaryTemplate | null>(null);
+  const originalEntryRef = useRef<DiaryEntry | null>(existingEntry || null);
   
   const [dialogMode, setDialogMode] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState<DiaryTemplate | null>(null);
@@ -102,50 +112,184 @@ export function EditorScreen() {
   const [draftChecked, setDraftChecked] = useState(false);
 
   useEffect(() => {
+    if (existingEntry) {
+      originalEntryRef.current = existingEntry;
+    }
+  }, [existingEntry?.id]);
+
+  useEffect(() => {
+    if (entryId || conflictChecked || draftOnlyMode) return;
+    if (!existingEntryByDate) {
+      setConflictChecked(true);
+      return;
+    }
+
+    Alert.alert(
+      '今天已有日记',
+      '请选择处理方式：',
+      [
+        {
+          text: '取消',
+          style: 'cancel',
+          onPress: () => {
+            setConflictChecked(true);
+            navigation.goBack();
+          },
+        },
+        {
+          text: '覆盖编辑',
+          onPress: () => {
+            setConflictChecked(true);
+          },
+        },
+        {
+          text: '合并内容',
+          onPress: () => {
+            setContent(`${existingEntryByDate.content}\n\n---\n\n`);
+            setShowTemplateModal(false);
+            setHasChanges(true);
+            setHistory([{ content: `${existingEntryByDate.content}\n\n---\n\n`, images: getInitialImages(existingEntryByDate) }]);
+            setHistoryIndex(0);
+            setConflictChecked(true);
+          },
+        },
+        {
+          text: '另存为草稿',
+          onPress: () => {
+            setIgnoreExistingEntry(true);
+            setDraftOnlyMode(true);
+            setContent('');
+            setMood(undefined);
+            setWeather(undefined);
+            setImages([]);
+            setTags([]);
+            setTemplateUsed(undefined);
+            setShowTemplateModal(true);
+            setHasChanges(false);
+            setHistory([{ content: '', images: [] }]);
+            setHistoryIndex(0);
+            setConflictChecked(true);
+          },
+        },
+      ]
+    );
+  }, [entryId, conflictChecked, draftOnlyMode, existingEntryByDate, navigation]);
+
+  useEffect(() => {
     if (draftChecked) return;
     
     const draft = getDraft();
-    if (draft && draft.diaryId === diaryId && !existingEntry) {
-      const timeDiff = Date.now() - draft.savedAt;
-      const hoursDiff = timeDiff / (1000 * 60 * 60);
-      
-      if (hoursDiff < 24 && draft.content.trim()) {
-        Alert.alert(
-          '发现草稿',
-          '是否恢复上次未保存的内容？',
-          [
-            { 
-              text: '丢弃', 
-              style: 'destructive',
-              onPress: () => {
-                clearDraft();
-                setDraftChecked(true);
-              }
-            },
-            { 
-              text: '恢复', 
-              onPress: () => {
-                setContent(draft.content);
-                if (draft.mood) setMood(draft.mood);
-                if (draft.weather) setWeather(draft.weather);
-                if (draft.images) setImages(draft.images);
-                if (draft.tags) setTags(draft.tags);
-                if (draft.templateUsed) setTemplateUsed(draft.templateUsed);
-                setShowTemplateModal(false);
-                clearDraft();
-                setDraftChecked(true);
-              }
-            },
-          ]
-        );
-      } else {
-        clearDraft();
-        setDraftChecked(true);
-      }
-    } else {
+    if (!draft || draft.diaryId !== diaryId) {
       setDraftChecked(true);
+      return;
     }
-  }, [diaryId, existingEntry, draftChecked]);
+
+    const timeDiff = Date.now() - draft.savedAt;
+    const hoursDiff = timeDiff / (1000 * 60 * 60);
+
+    if (hoursDiff >= 24 || !draft.content.trim()) {
+      clearDraft();
+      setDraftChecked(true);
+      return;
+    }
+
+    if (draftOnlyMode) {
+      setContent(draft.content);
+      if (draft.mood) setMood(draft.mood);
+      if (draft.weather) setWeather(draft.weather);
+      if (draft.images) setImages(draft.images);
+      if (draft.tags) setTags(draft.tags);
+      if (draft.templateUsed) setTemplateUsed(draft.templateUsed);
+      setShowTemplateModal(false);
+      clearDraft();
+      setDraftChecked(true);
+      return;
+    }
+
+    if (existingEntry) {
+      Alert.alert(
+        '发现草稿',
+        '检测到同一天的草稿内容，是否合并到当前日记？',
+        [
+          { 
+            text: '忽略', 
+            style: 'cancel',
+            onPress: () => {
+              clearDraft();
+              setDraftChecked(true);
+            }
+          },
+          { 
+            text: '替换', 
+            style: 'destructive',
+            onPress: () => {
+              setContent(draft.content);
+              if (draft.mood) setMood(draft.mood);
+              if (draft.weather) setWeather(draft.weather);
+              if (draft.images) setImages(draft.images);
+              if (draft.tags) setTags(draft.tags);
+              if (draft.templateUsed) setTemplateUsed(draft.templateUsed);
+              setShowTemplateModal(false);
+              setHasChanges(true);
+              setHistory([{ content: draft.content, images: draft.images || [] }]);
+              setHistoryIndex(0);
+              clearDraft();
+              setDraftChecked(true);
+            }
+          },
+          { 
+            text: '合并', 
+            onPress: () => {
+              const mergedContent = `${existingEntry.content}\n\n---\n\n${draft.content}`.trim();
+              const mergedTags = Array.from(new Set([...(existingEntry.tags || []), ...(draft.tags || [])]));
+              const mergedImages = [...(existingEntry.images || []), ...(draft.images || [])].slice(0, MAX_IMAGES);
+              setContent(mergedContent);
+              setTags(mergedTags);
+              setImages(mergedImages);
+              if (!existingEntry.mood && draft.mood) setMood(draft.mood);
+              if (!existingEntry.weather && draft.weather) setWeather(draft.weather);
+              if (!existingEntry.templateUsed && draft.templateUsed) setTemplateUsed(draft.templateUsed);
+              setShowTemplateModal(false);
+              setHasChanges(true);
+              setHistory([{ content: mergedContent, images: mergedImages }]);
+              setHistoryIndex(0);
+              clearDraft();
+              setDraftChecked(true);
+            }
+          },
+        ]
+      );
+    } else {
+      Alert.alert(
+        '发现草稿',
+        '是否恢复上次未保存的内容？',
+        [
+          { 
+            text: '丢弃', 
+            style: 'destructive',
+            onPress: () => {
+              clearDraft();
+              setDraftChecked(true);
+            }
+          },
+          { 
+            text: '恢复', 
+            onPress: () => {
+              setContent(draft.content);
+              if (draft.mood) setMood(draft.mood);
+              if (draft.weather) setWeather(draft.weather);
+              if (draft.images) setImages(draft.images);
+              if (draft.tags) setTags(draft.tags);
+              if (draft.templateUsed) setTemplateUsed(draft.templateUsed);
+              setShowTemplateModal(false);
+              clearDraft();
+              setDraftChecked(true);
+            }
+          },
+        ]
+      );
+    }
+  }, [diaryId, existingEntry, draftChecked, draftOnlyMode]);
 
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
@@ -194,7 +338,7 @@ export function EditorScreen() {
   }, 1000);
 
   useEffect(() => {
-    if (hasChanges) {
+    if (hasChanges && !draftOnlyMode) {
       const entry: DiaryEntry = {
         id: diaryId,
         date: existingEntry?.date || new Date(initialDate).getTime(),
@@ -208,7 +352,7 @@ export function EditorScreen() {
       };
       debouncedSave(entry);
     }
-  }, [content, mood, weather, images, tags, hasChanges, templateUsed, diaryId, existingEntry?.date, initialDate, debouncedSave]);
+  }, [content, mood, weather, images, tags, hasChanges, templateUsed, diaryId, existingEntry?.date, initialDate, debouncedSave, draftOnlyMode]);
 
   const handleContentChange = (text: string) => {
     setContent(text);
@@ -445,10 +589,10 @@ export function EditorScreen() {
       { 
         text: '删除', 
         style: 'destructive',
-        onPress: async () => {
+        onPress: () => {
           const fileName = images[index];
           if (fileName && !fileName.startsWith('data:')) {
-            await deleteImage(fileName);
+            setPendingDeleteImages((prev) => (prev.includes(fileName) ? prev : [...prev, fileName]));
           }
           const updatedImages = images.filter((_, i) => i !== index);
           setImages(updatedImages);
@@ -459,14 +603,24 @@ export function EditorScreen() {
     ]);
   };
 
-  const moveImage = (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= images.length) return;
-    const newImages = [...images];
-    const [moved] = newImages.splice(fromIndex, 1);
-    newImages.splice(toIndex, 0, moved);
-    setImages(newImages);
-    setHasChanges(true);
-  };
+  const renderSortItem = useCallback(({ item, drag, isActive, index }: RenderItemParams<string>) => (
+    <TouchableOpacity
+      style={[
+        styles.sortItem,
+        { borderColor: isActive ? colors.primary : colors.border, opacity: isActive ? 0.9 : 1 },
+      ]}
+      onLongPress={drag}
+      activeOpacity={0.9}
+    >
+      <Image source={{ uri: getImageUri(item) }} style={styles.sortImage} resizeMode="cover" />
+      <View style={[styles.sortHandle, { backgroundColor: colors.primary }]}>
+        <Feather name="move" size={14} color="#FFFFFF" />
+      </View>
+      <View style={styles.sortIndex}>
+        <Text style={styles.sortIndexText}>{index + 1}</Text>
+      </View>
+    </TouchableOpacity>
+  ), [colors]);
 
   const addTag = () => {
     const trimmed = newTag.trim();
@@ -488,7 +642,29 @@ export function EditorScreen() {
     setShowPromptModal(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (draftOnlyMode) {
+      if (content.trim()) {
+        saveDraft({
+          diaryId,
+          content,
+          mood,
+          weather,
+          images: images.length > 0 ? images : undefined,
+          tags: tags.length > 0 ? tags : undefined,
+          templateUsed,
+          savedAt: Date.now(),
+        });
+      }
+      navigation.goBack();
+      return;
+    }
+
+    if (pendingDeleteImages.length > 0) {
+      await deleteImages(pendingDeleteImages);
+      setPendingDeleteImages([]);
+    }
+
     const entry: DiaryEntry = {
       id: diaryId,
       date: existingEntry?.date || new Date(initialDate).getTime(),
@@ -512,9 +688,65 @@ export function EditorScreen() {
   };
 
   const handleClose = () => {
+    if (draftOnlyMode) {
+      if (content.trim()) {
+        saveDraft({
+          diaryId,
+          content,
+          mood,
+          weather,
+          images: images.length > 0 ? images : undefined,
+          tags: tags.length > 0 ? tags : undefined,
+          templateUsed,
+          savedAt: Date.now(),
+        });
+      }
+      navigation.goBack();
+      return;
+    }
+
     if (hasChanges && content.trim()) {
-      handleSave();
-    } else if (content.trim() && !existingEntry) {
+      Alert.alert(
+        '退出编辑',
+        '已自动保存当前内容，是否退出？',
+        [
+          { text: '继续编辑', style: 'cancel' },
+          { text: '保存并退出', onPress: () => handleSave() },
+          {
+            text: '放弃更改',
+            style: 'destructive',
+            onPress: async () => {
+              if (isEditing && originalEntryRef.current) {
+                const original = originalEntryRef.current;
+                const currentImages = images || [];
+                const originalImages = original.images || [];
+                const addedImages = currentImages.filter(img => !originalImages.includes(img));
+                if (addedImages.length > 0) {
+                  await deleteImages(addedImages);
+                }
+                setPendingDeleteImages([]);
+                updateEntry({
+                  ...original,
+                  wordCount: countWords(original.content),
+                });
+              } else {
+                if (!isEditing && content.trim()) {
+                  if (pendingDeleteImages.length > 0) {
+                    await deleteImages(pendingDeleteImages);
+                  }
+                  deleteEntry(diaryId);
+                }
+              }
+              clearDraft();
+              navigation.goBack();
+            }
+          },
+        ]
+      );
+      return;
+    }
+
+    if (content.trim() && !existingEntry) {
       saveDraft({
         diaryId,
         content,
@@ -540,6 +772,7 @@ export function EditorScreen() {
         <View style={styles.headerCenter}>
           <Text style={[styles.headerDate, { color: colors.textPrimary }]}>{formatDateDisplay(new Date(initialDate))}</Text>
           <Text style={[styles.wordCount, { color: colors.textMuted }]}>{countWords(content)} 字</Text>
+          <Text style={[styles.headerTime, { color: colors.textMuted }]}>{formatTime(new Date())}</Text>
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity onPress={undo} style={styles.headerButton} disabled={!canUndo}>
@@ -547,6 +780,9 @@ export function EditorScreen() {
           </TouchableOpacity>
           <TouchableOpacity onPress={redo} style={styles.headerButton} disabled={!canRedo}>
             <Feather name="rotate-cw" size={20} color={canRedo ? colors.textPrimary : colors.textMuted} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setWritingMode((prev) => !prev)} style={styles.headerButton}>
+            <Feather name={writingMode ? 'minimize-2' : 'maximize-2'} size={20} color={colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setShowPreview(!showPreview)} style={styles.headerButton}>
             <Feather name={showPreview ? 'edit-2' : 'eye'} size={20} color={colors.textPrimary} />
@@ -640,8 +876,12 @@ export function EditorScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <MoodPicker selectedMood={mood} onSelect={handleMoodSelect} />
-          <WeatherPicker selectedWeather={weather} onSelect={handleWeatherSelect} />
+          {!writingMode && (
+            <>
+              <MoodPicker selectedMood={mood} onSelect={handleMoodSelect} />
+              <WeatherPicker selectedWeather={weather} onSelect={handleWeatherSelect} />
+            </>
+          )}
 
           <View style={styles.editorContainer}>
             {showPreview ? (
@@ -660,7 +900,7 @@ export function EditorScreen() {
               />
             )}
 
-            {tags.length > 0 && (
+            {!writingMode && tags.length > 0 && (
               <View style={styles.tagsContainer}>
                 {tags.map((tag) => (
                   <TouchableOpacity 
@@ -675,7 +915,7 @@ export function EditorScreen() {
               </View>
             )}
 
-            {images.length > 0 && (
+            {!writingMode && images.length > 0 && (
               <View style={styles.imagesGrid}>
                 {images.map((img, index) => (
                   <View key={index} style={styles.imageWrapper}>
@@ -690,26 +930,6 @@ export function EditorScreen() {
                     >
                       <Feather name="x" size={14} color="#FFFFFF" />
                     </TouchableOpacity>
-                    {images.length > 1 && (
-                      <View style={styles.imageOrderButtons}>
-                        {index > 0 && (
-                          <TouchableOpacity 
-                            style={styles.orderButton}
-                            onPress={() => moveImage(index, index - 1)}
-                          >
-                            <Feather name="chevron-left" size={14} color="#FFFFFF" />
-                          </TouchableOpacity>
-                        )}
-                        {index < images.length - 1 && (
-                          <TouchableOpacity 
-                            style={styles.orderButton}
-                            onPress={() => moveImage(index, index + 1)}
-                          >
-                            <Feather name="chevron-right" size={14} color="#FFFFFF" />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    )}
                   </View>
                 ))}
                 {images.length < MAX_IMAGES && (
@@ -726,50 +946,59 @@ export function EditorScreen() {
           </View>
         </ScrollView>
 
-        <View style={[styles.toolbar, { borderTopColor: colors.divider, backgroundColor: colors.cardBackground }]}>
-          <TouchableOpacity 
-            style={styles.toolButton}
-            onPress={() => setShowTemplateModal(true)}
-          >
-            <Feather name="file-text" size={22} color={colors.textSecondary} />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.toolButton}
-            onPress={showImageOptions}
-            disabled={isSaving}
-          >
-            <Feather name="image" size={22} color={isSaving ? colors.textMuted : colors.textSecondary} />
-            {images.length > 0 && (
-              <View style={[styles.imageBadge, { backgroundColor: colors.primary }]}>
-                <Text style={styles.imageBadgeText}>{images.length}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.toolButton}
-            onPress={takePhoto}
-            disabled={isSaving}
-          >
-            <Feather name="camera" size={22} color={isSaving ? colors.textMuted : colors.textSecondary} />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.toolButton}
-            onPress={() => setShowTagModal(true)}
-          >
-            <Feather name="tag" size={22} color={colors.textSecondary} />
-            {tags.length > 0 && (
-              <View style={[styles.imageBadge, { backgroundColor: colors.primary }]}>
-                <Text style={styles.imageBadgeText}>{tags.length}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.toolButton}
-            onPress={() => setShowPromptModal(true)}
-          >
-            <Feather name="help-circle" size={22} color={colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
+        {!writingMode && (
+          <View style={[styles.toolbar, { borderTopColor: colors.divider, backgroundColor: colors.cardBackground }]}>
+            <TouchableOpacity 
+              style={styles.toolButton}
+              onPress={() => setShowTemplateModal(true)}
+            >
+              <Feather name="file-text" size={22} color={colors.textSecondary} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.toolButton}
+              onPress={showImageOptions}
+              disabled={isSaving}
+            >
+              <Feather name="image" size={22} color={isSaving ? colors.textMuted : colors.textSecondary} />
+              {images.length > 0 && (
+                <View style={[styles.imageBadge, { backgroundColor: colors.primary }]}>
+                  <Text style={styles.imageBadgeText}>{images.length}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.toolButton}
+              onPress={takePhoto}
+              disabled={isSaving}
+            >
+              <Feather name="camera" size={22} color={isSaving ? colors.textMuted : colors.textSecondary} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.toolButton}
+              onPress={() => setShowSortModal(true)}
+              disabled={images.length < 2}
+            >
+              <Feather name="move" size={22} color={images.length < 2 ? colors.textMuted : colors.textSecondary} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.toolButton}
+              onPress={() => setShowTagModal(true)}
+            >
+              <Feather name="tag" size={22} color={colors.textSecondary} />
+              {tags.length > 0 && (
+                <View style={[styles.imageBadge, { backgroundColor: colors.primary }]}>
+                  <Text style={styles.imageBadgeText}>{tags.length}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.toolButton}
+              onPress={() => setShowPromptModal(true)}
+            >
+              <Feather name="help-circle" size={22} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        )}
       </KeyboardAvoidingView>
       )}
 
@@ -848,6 +1077,32 @@ export function EditorScreen() {
           </View>
         </View>
       </Modal>
+
+      <Modal visible={showSortModal} animationType="slide" onRequestClose={() => setShowSortModal(false)}>
+        <SafeAreaView style={[styles.sortModalContainer, { backgroundColor: colors.background }]}>
+          <View style={styles.sortHeader}>
+            <TouchableOpacity onPress={() => setShowSortModal(false)} style={styles.sortCloseButton}>
+              <Feather name="x" size={24} color={colors.textSecondary} />
+            </TouchableOpacity>
+            <Text style={[styles.sortTitle, { color: colors.textPrimary }]}>图片排序</Text>
+            <View style={{ width: 44 }} />
+          </View>
+          <Text style={[styles.sortHint, { color: colors.textMuted }]}>长按图片拖拽排序</Text>
+          <DraggableFlatList
+            data={images}
+            keyExtractor={(item, index) => `${item}-${index}`}
+            onDragEnd={({ data }) => {
+              setImages(data);
+              setHasChanges(true);
+              setHistory([{ content, images: data }]);
+              setHistoryIndex(0);
+            }}
+            renderItem={renderSortItem}
+            numColumns={3}
+            contentContainerStyle={styles.sortGrid}
+          />
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -879,6 +1134,10 @@ const styles = StyleSheet.create({
   },
   wordCount: {
     fontSize: 12,
+    marginTop: 2,
+  },
+  headerTime: {
+    fontSize: 11,
     marginTop: 2,
   },
   keyboardView: {
@@ -1080,6 +1339,74 @@ const styles = StyleSheet.create({
   promptItemText: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  sortModalContainer: {
+    flex: 1,
+  },
+  sortHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Layout.spacing.md,
+    paddingVertical: Layout.spacing.md,
+  },
+  sortTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  sortCloseButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sortHint: {
+    paddingHorizontal: Layout.spacing.md,
+    paddingBottom: Layout.spacing.sm,
+    fontSize: 12,
+  },
+  sortGrid: {
+    paddingHorizontal: Layout.spacing.md,
+    paddingBottom: Layout.spacing.xl,
+    gap: 8,
+  },
+  sortItem: {
+    width: '31%',
+    aspectRatio: 1,
+    borderRadius: Layout.borderRadius.md,
+    borderWidth: 1,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  sortImage: {
+    width: '100%',
+    height: '100%',
+  },
+  sortHandle: {
+    position: 'absolute',
+    bottom: 6,
+    right: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sortIndex: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sortIndexText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '600',
   },
   dialogContainer: {
     padding: Layout.spacing.lg,

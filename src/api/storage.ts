@@ -52,6 +52,7 @@ const STORAGE_KEYS = {
   THEME: 'theme',
   THEME_ID: 'theme_id',
   IMAGE_COMPRESSION: 'image_compression',
+  ONBOARDING_DONE: 'onboarding_done',
 } as const;
 
 // ============ 日记条目相关 ============
@@ -172,6 +173,15 @@ export const getImageCompression = (): boolean => {
 // 设置图片压缩
 export const setImageCompression = (enabled: boolean): void => {
   getStorage().set(STORAGE_KEYS.IMAGE_COMPRESSION, enabled);
+};
+
+// 新手引导
+export const getOnboardingDone = (): boolean => {
+  return getStorage().getBoolean(STORAGE_KEYS.ONBOARDING_DONE) ?? false;
+};
+
+export const setOnboardingDone = (done: boolean): void => {
+  getStorage().set(STORAGE_KEYS.ONBOARDING_DONE, done);
 };
 
 // ============ 导入导出相关 ============

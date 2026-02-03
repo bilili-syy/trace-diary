@@ -76,14 +76,14 @@ export interface AuthState {
 // 导航参数类型
 export type RootStackParamList = {
   Main: undefined;
-  Editor: { entryId?: string; date?: string };
+  Editor: { entryId?: string; date?: string; draftOnly?: boolean };
   DiaryDetail: { entryId: string };
 };
 
 export type MainTabParamList = {
   Home: undefined;
   Calendar: undefined;
-  Settings: undefined;
+  Settings: { open?: 'theme' | 'reminder' | 'appLock' } | undefined;
 };
 
 // 导出/导入数据结构

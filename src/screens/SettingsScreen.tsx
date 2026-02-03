@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { cacheDirectory, writeAsStringAsync, readAsStringAsync, EncodingType } from 'expo-file-system/legacy';
@@ -26,7 +27,7 @@ import { SettingsItem, PinInput, MoodChart } from '../components';
 import { useDiary, useAuth } from '../context';
 import { useTheme } from '../context/ThemeProvider';
 import { Layout } from '../constants';
-import { ExportData } from '../types';
+import { ExportData, MainTabParamList } from '../types';
 import { isValidPinFormat } from '../utils/cryptoUtils';
 import { readImageAsBase64, writeImageFromBase64 } from '../utils/imageStorage';
 import { getStorage, getImageCompression, setImageCompression } from '../api/storage';
@@ -66,6 +67,8 @@ const STORAGE_KEYS = {
 };
 
 export function SettingsScreen() {
+  const route = useRoute<RouteProp<MainTabParamList, 'Settings'>>();
+  const navigation = useNavigation();
   const { exportEntries, importEntries, state: diaryState } = useDiary();
   const { state: authState, enableAppLock, disableAppLock, authenticateWithPin } = useAuth();
   const { colors, theme, setTheme, availableThemes, colorMode, setColorMode, isDark } = useTheme();
@@ -157,6 +160,26 @@ export function SettingsScreen() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    const openTarget = route.params?.open;
+    if (!openTarget) return;
+
+    if (openTarget === 'theme') {
+      setThemeModalVisible(true);
+    } else if (openTarget === 'reminder') {
+      setTempHour(reminderSettings.hour.toString());
+      setTempMinute(reminderSettings.minute.toString().padStart(2, '0'));
+      setReminderModalVisible(true);
+    } else if (openTarget === 'appLock') {
+      if (!authState.isAppLockEnabled) {
+        setPinModalMode('setup');
+        setPinModalVisible(true);
+      }
+    }
+
+    navigation.setParams({ open: undefined });
+  }, [route.params?.open, reminderSettings.hour, reminderSettings.minute, authState.isAppLockEnabled, navigation]);
 
   const scheduleReminder = async (settings: ReminderSettings) => {
     await Notifications.cancelAllScheduledNotificationsAsync();

@@ -179,8 +179,8 @@ export function DiaryDetailScreen() {
         </View>
       </View>
 
-      <View style={styles.viewShotHidden}>
-        <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
+      <View style={styles.viewShotHidden} collapsable={false}>
+        <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }} collapsable={false}>
           <View style={[styles.exportContainer, { backgroundColor: colors.cardBackground, padding: Layout.spacing.md }]}>
             <View style={styles.metaSection}>
               <View style={styles.dateRow}>
@@ -373,11 +373,10 @@ const styles = StyleSheet.create({
   },
   viewShotHidden: {
     position: 'absolute',
-    left: 0,
+    left: -9999,
     top: 0,
     width: SCREEN_WIDTH,
     opacity: 0,
-    zIndex: -1,
     pointerEvents: 'none',
   },
   header: {
