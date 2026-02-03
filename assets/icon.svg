@@ -1,0 +1,54 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F8F6F3"/>
+      <stop offset="100%" style="stop-color:#EBE7E1"/>
+    </linearGradient>
+    <linearGradient id="featherGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6B7B6E"/>
+      <stop offset="100%" style="stop-color:#4A5A4D"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="1024" height="1024" rx="180" fill="url(#bgGradient)"/>
+  
+  <g transform="translate(512, 512)">
+    <path 
+      d="M-180 180 
+         Q-120 100, -60 40 
+         Q0 -20, 80 -100 
+         Q140 -160, 180 -200
+         Q160 -140, 120 -80
+         Q80 -20, 20 40
+         Q-40 100, -100 140
+         Q-140 160, -180 180Z"
+      fill="url(#featherGradient)"
+      opacity="0.9"
+    />
+    
+    <line x1="-160" y1="160" x2="160" y2="-180" 
+          stroke="#3D4A3F" stroke-width="8" stroke-linecap="round"/>
+    
+    <g stroke="#4A5A4D" stroke-width="3" stroke-linecap="round" opacity="0.6">
+      <line x1="-100" y1="100" x2="-40" y2="60"/>
+      <line x1="-60" y1="80" x2="0" y2="20"/>
+      <line x1="-20" y1="40" x2="40" y2="-20"/>
+      <line x1="20" y1="0" x2="80" y2="-60"/>
+      <line x1="60" y1="-40" x2="120" y2="-100"/>
+      <line x1="100" y1="-80" x2="140" y2="-140"/>
+    </g>
+    
+    <circle cx="170" cy="-190" r="12" fill="#3D4A3F"/>
+  </g>
+  
+  <g transform="translate(512, 750)">
+    <path 
+      d="M-80 0 Q-40 -20, 0 -25 Q40 -20, 80 0" 
+      stroke="#6B7B6E" 
+      stroke-width="6" 
+      fill="none" 
+      stroke-linecap="round"
+      opacity="0.5"
+    />
+  </g>
+</svg>
