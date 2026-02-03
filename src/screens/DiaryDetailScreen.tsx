@@ -10,7 +10,9 @@ import {
   StatusBar,
   Modal,
   Dimensions,
+  Animated,
 } from 'react-native';
+import { PinchGestureHandler, PinchGestureHandlerGestureEvent, State, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -26,11 +28,42 @@ import { formatDateDisplay, formatWeekday } from '../utils/dateUtils';
 import { getImageUri } from '../utils/imageStorage';
 import { MarkdownPreview } from '../components';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const getEntryImages = (entry: { images?: string[]; imageBase64?: string | null }): string[] => {
   if (entry.images && entry.images.length > 0) return entry.images;
   return [];
+};
+
+const ZoomableImage = ({ uri }: { uri: string }) => {
+  const scale = useRef(new Animated.Value(1)).current;
+  const baseScale = useRef(1);
+
+  const onPinchEvent = Animated.event<PinchGestureHandlerGestureEvent>(
+    [{ nativeEvent: { scale } }],
+    { useNativeDriver: true }
+  );
+
+  const onPinchStateChange = (event: PinchGestureHandlerGestureEvent) => {
+    if (event.nativeEvent.oldState === State.ACTIVE) {
+      const newScale = baseScale.current * event.nativeEvent.scale;
+      baseScale.current = Math.min(Math.max(newScale, 1), 4);
+      scale.setValue(baseScale.current);
+    }
+  };
+
+  return (
+    <PinchGestureHandler
+      onGestureEvent={onPinchEvent}
+      onHandlerStateChange={onPinchStateChange}
+    >
+      <Animated.Image
+        source={{ uri }}
+        style={[styles.fullImage, { transform: [{ scale }] }]}
+        resizeMode="contain"
+      />
+    </PinchGestureHandler>
+  );
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'DiaryDetail'>;
@@ -146,12 +179,8 @@ export function DiaryDetailScreen() {
         </View>
       </View>
 
-      <ScrollView 
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }} style={{ backgroundColor: colors.cardBackground }}>
+      <View style={styles.viewShotHidden}>
+        <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
           <View style={[styles.exportContainer, { backgroundColor: colors.cardBackground, padding: Layout.spacing.md }]}>
             <View style={styles.metaSection}>
               <View style={styles.dateRow}>
@@ -161,7 +190,6 @@ export function DiaryDetailScreen() {
                   <Text style={[styles.weekday, { color: colors.textSecondary }]}>{formatWeekday(entry.date)}</Text>
                 </View>
               </View>
-
               <View style={styles.metaRow}>
                 {weatherOption && (
                   <View style={styles.metaItem}>
@@ -184,26 +212,10 @@ export function DiaryDetailScreen() {
                   </View>
                 )}
               </View>
-
-              {entry.tags && entry.tags.length > 0 && (
-                <View style={styles.tagsRow}>
-                  {entry.tags.map((tag, index) => (
-                    <View key={index} style={[styles.tag, { backgroundColor: colors.primary + '20' }]}>
-                      <Text style={[styles.tagText, { color: colors.primary }]}>#{tag}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
             </View>
-
             <View style={styles.contentSection}>
-              {showMarkdown ? (
-                <MarkdownPreview content={entry.content} />
-              ) : (
-                <Text style={[styles.contentText, { color: colors.textPrimary }]}>{entry.content}</Text>
-              )}
+              <MarkdownPreview content={entry.content} />
             </View>
-
             {entryImages.length > 0 && (
               <View style={styles.exportImagesSection}>
                 <View style={styles.exportImagesGrid}>
@@ -226,12 +238,68 @@ export function DiaryDetailScreen() {
                 </View>
               </View>
             )}
-
             <View style={[styles.exportFooter, { borderTopColor: colors.divider }]}>
               <Text style={[styles.exportBrand, { color: colors.textMuted }]}>素履 · Trace</Text>
             </View>
           </View>
         </ViewShot>
+      </View>
+
+      <ScrollView 
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.metaSection}>
+          <View style={styles.dateRow}>
+            {entry.mood && <Text style={styles.mood}>{entry.mood}</Text>}
+            <View style={styles.dateInfo}>
+              <Text style={[styles.date, { color: colors.textPrimary }]}>{formatDateDisplay(entry.date)}</Text>
+              <Text style={[styles.weekday, { color: colors.textSecondary }]}>{formatWeekday(entry.date)}</Text>
+            </View>
+          </View>
+
+          <View style={styles.metaRow}>
+            {weatherOption && (
+              <View style={styles.metaItem}>
+                <Feather 
+                  name={weatherOption.icon as any} 
+                  size={16} 
+                  color={Colors.weatherColors[entry.weather as keyof typeof Colors.weatherColors]} 
+                />
+                <Text style={[styles.metaText, { color: colors.textSecondary }]}>{weatherOption.label}</Text>
+              </View>
+            )}
+            <View style={styles.metaItem}>
+              <Feather name="edit-3" size={14} color={colors.textMuted} />
+              <Text style={[styles.metaText, { color: colors.textSecondary }]}>{entry.wordCount} 字</Text>
+            </View>
+            {entryImages.length > 0 && (
+              <View style={styles.metaItem}>
+                <Feather name="image" size={14} color={colors.textMuted} />
+                <Text style={[styles.metaText, { color: colors.textSecondary }]}>{entryImages.length} 张图片</Text>
+              </View>
+            )}
+          </View>
+
+          {entry.tags && entry.tags.length > 0 && (
+            <View style={styles.tagsRow}>
+              {entry.tags.map((tag, index) => (
+                <View key={index} style={[styles.tag, { backgroundColor: colors.primary + '20' }]}>
+                  <Text style={[styles.tagText, { color: colors.primary }]}>#{tag}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.contentSection}>
+          {showMarkdown ? (
+            <MarkdownPreview content={entry.content} />
+          ) : (
+            <Text style={[styles.contentText, { color: colors.textPrimary }]}>{entry.content}</Text>
+          )}
+        </View>
 
         {entryImages.length > 0 && (
           <View style={styles.imageSection}>
@@ -265,7 +333,7 @@ export function DiaryDetailScreen() {
         animationType="fade"
         onRequestClose={() => setImageViewerVisible(false)}
       >
-        <View style={styles.imageViewerContainer}>
+        <GestureHandlerRootView style={styles.imageViewerContainer}>
           <TouchableOpacity 
             style={styles.closeViewerButton}
             onPress={() => setImageViewerVisible(false)}
@@ -284,11 +352,7 @@ export function DiaryDetailScreen() {
           >
             {entryImages.map((img, index) => (
               <View key={index} style={styles.imageViewerPage}>
-                <Image 
-                  source={{ uri: getImageUri(img) }}
-                  style={styles.fullImage}
-                  resizeMode="contain"
-                />
+                <ZoomableImage uri={getImageUri(img)} />
               </View>
             ))}
           </ScrollView>
@@ -297,7 +361,7 @@ export function DiaryDetailScreen() {
               <Text style={styles.imageCounterText}>{selectedImageIndex + 1} / {entryImages.length}</Text>
             </View>
           )}
-        </View>
+        </GestureHandlerRootView>
       </Modal>
     </SafeAreaView>
   );
@@ -306,6 +370,15 @@ export function DiaryDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  viewShotHidden: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: SCREEN_WIDTH,
+    opacity: 0,
+    zIndex: -1,
+    pointerEvents: 'none',
   },
   header: {
     flexDirection: 'row',

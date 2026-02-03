@@ -48,6 +48,7 @@
           "photosPermission": "允许素履访问相册以添加图片到日记"
         }
       ],
+      "expo-notifications",
       "expo-secure-store"
     ],
     "extra": {

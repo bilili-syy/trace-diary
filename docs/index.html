@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>素履 - 记录人生轨迹，素雅且纯粹</title>
+  <meta name="description" content="素履是一款以绝对隐私为核心的日记应用，所有数据本地存储，支持生物识别解锁、Markdown写作、多主题配色。">
+  <meta name="keywords" content="日记,隐私,本地存储,Markdown,Android,iOS">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #5B8C5A;
+      --primary-light: #7BA87A;
+      --primary-dark: #4A7249;
+      --background: #F5F5F0;
+      --card: #FFFFFF;
+      --text-primary: #333333;
+      --text-secondary: #666666;
+      --text-muted: #999999;
+      --border: #E8E8E4;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Serif SC', serif;
+      background: var(--background);
+      color: var(--text-primary);
+      line-height: 1.8;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    header {
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+
+    .logo {
+      width: 120px;
+      height: 120px;
+      background: var(--primary);
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 32px;
+      box-shadow: 0 8px 32px rgba(91, 140, 90, 0.3);
+    }
+
+    .logo svg {
+      width: 60px;
+      height: 60px;
+      fill: white;
+    }
+
+    h1 {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--primary-dark);
+    }
+
+    .tagline {
+      font-size: 20px;
+      color: var(--text-secondary);
+      margin-bottom: 40px;
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--primary);
+      color: white;
+      padding: 16px 40px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 18px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(91, 140, 90, 0.3);
+    }
+
+    .download-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(91, 140, 90, 0.4);
+    }
+
+    .download-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+    }
+
+    .hero-image {
+      margin: 60px 0;
+      text-align: center;
+    }
+
+    .mockup {
+      max-width: 280px;
+      border-radius: 32px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    section {
+      padding: 60px 0;
+    }
+
+    .section-title {
+      font-size: 32px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 48px;
+      color: var(--primary-dark);
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--card);
+      padding: 32px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    }
+
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--primary-light), var(--primary));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .feature-icon svg {
+      width: 28px;
+      height: 28px;
+      fill: white;
+    }
+
+    .feature-card h3 {
+      font-size: 20px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .feature-card p {
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    .privacy-section {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border-radius: 24px;
+      padding: 60px 40px;
+      text-align: center;
+      margin: 40px 0;
+    }
+
+    .privacy-section h2 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    .privacy-section p {
+      font-size: 17px;
+      opacity: 0.9;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .themes {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 40px;
+    }
+
+    .theme-dot {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: transform 0.2s;
+    }
+
+    .theme-dot:hover {
+      transform: scale(1.1);
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 60px 0 40px;
+      }
+
+      h1 {
+        font-size: 36px;
+      }
+
+      .tagline {
+        font-size: 17px;
+      }
+
+      .section-title {
+        font-size: 26px;
+      }
+
+      .privacy-section {
+        padding: 40px 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+        </svg>
+      </div>
+      <h1>素履</h1>
+      <p class="tagline">记录人生轨迹，素雅且纯粹</p>
+      <a href="https://github.com/pilipili-hash/trace-diary/releases" class="download-btn">
+        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        下载 APK
+      </a>
+    </header>
+
+    <section>
+      <h2 class="section-title">核心特性</h2>
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+          </div>
+          <h3>绝对隐私</h3>
+          <p>所有数据存储在本地设备，不上传任何服务器。支持 PIN 码和生物识别双重保护。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          </div>
+          <h3>Markdown 写作</h3>
+          <p>支持完整的 Markdown 语法，让写作更加专注。实时预览，撤销重做，随心所欲。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+          </div>
+          <h3>图片日记</h3>
+          <p>每篇日记支持添加最多 9 张图片，自动压缩优化，完整记录生活的每个瞬间。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+          </div>
+          <h3>心情追踪</h3>
+          <p>记录每天的心情和天气，7 天心情趋势图表，了解自己的情绪变化。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
+          </div>
+          <h3>日历视图</h3>
+          <p>月历形式浏览所有日记，一目了然查看写作记录，培养持续写作习惯。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+          </div>
+          <h3>数据导出</h3>
+          <p>支持 ZIP 格式完整导出导入，包含所有日记和图片，数据永远属于你。</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="privacy-section">
+      <h2>🔒 你的隐私，我们的承诺</h2>
+      <p>素履不会收集任何用户数据，不需要注册账号，不联网上传。你的日记只存在于你的设备中，真正做到"我的日记我做主"。</p>
+    </div>
+
+    <section>
+      <h2 class="section-title">五种主题配色</h2>
+      <p style="text-align: center; color: var(--text-secondary); margin-bottom: 24px;">选择你喜欢的颜色，让写作更有氛围</p>
+      <div class="themes">
+        <div class="theme-dot" style="background: #5B8C5A;" title="花园绿"></div>
+        <div class="theme-dot" style="background: #4A90A4;" title="海洋蓝"></div>
+        <div class="theme-dot" style="background: #8B7CB6;" title="薰衣草"></div>
+        <div class="theme-dot" style="background: #D4764E;" title="日落橙"></div>
+        <div class="theme-dot" style="background: #C77B8B;" title="玫瑰粉"></div>
+      </div>
+    </section>
+
+    <footer>
+      <p>素履 &copy; 2024 | <a href="https://github.com/pilipili-hash/trace-diary">GitHub</a></p>
+    </footer>
+  </div>
+</body>
+</html>

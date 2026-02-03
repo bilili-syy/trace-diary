@@ -40,8 +40,8 @@ export function AuthScreen() {
         <View style={styles.iconContainer}>
           <Feather name="lock" size={40} color={Colors.primary} />
         </View>
-        <Text style={styles.appName}>Mind Garden</Text>
-        <Text style={styles.subtitle}>心灵花园</Text>
+        <Text style={styles.appName}>素履</Text>
+        <Text style={styles.subtitle}>记录人生轨迹，素雅且纯粹</Text>
       </View>
 
       <PinInput
