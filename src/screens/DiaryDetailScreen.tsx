@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef } from 'react';
+﻿import React, { useCallback, useState, useRef } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -26,15 +26,11 @@ import { Colors, Layout, WEATHER_OPTIONS } from '../constants';
 import { RootStackParamList } from '../types';
 import { formatDateDisplay, formatWeekday } from '../utils/dateUtils';
 import { getImageUri } from '../utils/imageStorage';
+import { getEntryImages } from '../utils/entryUtils';
 import { MarkdownPreview, ThemedAlert } from '../components';
 import { useThemedAlert } from '../hooks';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-const getEntryImages = (entry: { images?: string[]; imageBase64?: string | null }): string[] => {
-  if (entry.images && entry.images.length > 0) return entry.images;
-  return [];
-};
 
 const ZoomableImage = ({ uri }: { uri: string }) => {
   const scale = useRef(new Animated.Value(1)).current;

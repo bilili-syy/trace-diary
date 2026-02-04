@@ -4,10 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { PinInput } from '../components';
 import { useAuth } from '../context';
-import { Colors, Layout } from '../constants';
+import { useTheme } from '../context/ThemeProvider';
+import { Layout } from '../constants';
 
 export function AuthScreen() {
   const { state, authenticate, authenticateWithPin } = useAuth();
+  const { colors, isDark } = useTheme();
   const [error, setError] = useState<string>('');
 
   const handleBiometricAuth = useCallback(async () => {
@@ -33,15 +35,15 @@ export function AuthScreen() {
   }, [authenticateWithPin]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
       
       <View style={styles.header}>
-        <View style={styles.iconContainer}>
-          <Feather name="lock" size={40} color={Colors.primary} />
+        <View style={[styles.iconContainer, { backgroundColor: colors.primary + '15' }]}>
+          <Feather name="lock" size={40} color={colors.primary} />
         </View>
-        <Text style={styles.appName}>素履</Text>
-        <Text style={styles.subtitle}>记录人生轨迹，素雅且纯粹</Text>
+        <Text style={[styles.appName, { color: colors.textPrimary }]}>素履</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>记录人生轨迹，素雅且纯粹</Text>
       </View>
 
       <PinInput
@@ -58,7 +60,6 @@ export function AuthScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
     alignItems: 'center',
@@ -69,7 +70,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.primary + '15',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Layout.spacing.md,
@@ -77,12 +77,10 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: Colors.textPrimary,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.textSecondary,
   },
 });
 

@@ -33,46 +33,84 @@ jobs:
       - name: Build Android (EAS)
         id: build_android
         run: |
-          BUILD_JSON=$(eas build --platform android --profile preview --non-interactive --wait --json)
-          echo "$BUILD_JSON" > build_android.json
-          BUILD_ID=$(python -c "import json;print(json.load(open('build_android.json'))[0]['id'])")
+          eas build --platform android --profile preview --non-interactive --wait --json > build_android.json
+          BUILD_ID=$(node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync("build_android.json","utf8"));const b=Array.isArray(d)?d[0]:d;console.log(b.id);')
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
 
       - name: Resolve Android artifact
         id: android_artifact
         run: |
-          BUILD_VIEW=$(eas build:view ${{ steps.build_android.outputs.build_id }} --json)
-          echo "$BUILD_VIEW" > build_android_view.json
-          URL=$(python -c "import json; d=json.load(open('build_android_view.json')); a=d.get('artifacts') or {}; print(a.get('buildUrl') or a.get('applicationArchiveUrl') or a.get('artifactUrl') or a.get('url') or '')")
-          if [ -z \"$URL\" ]; then
-            echo \"[ERROR] Android artifact URL not found\"; exit 1;
+          echo "=== build_android.json content ==="
+          cat build_android.json || echo "File not found"
+          echo "=== End of build_android.json ==="
+          URL=$(node -e '
+            const fs = require("fs");
+            const data = JSON.parse(fs.readFileSync("build_android.json", "utf8"));
+            const root = Array.isArray(data) ? data[0] : data;
+            const url = root.artifacts?.buildUrl || root.buildUrl || root.applicationArchiveUrl || "";
+            if (url) console.log(url);
+          ')
+          if [ -z "$URL" ]; then
+            echo "URL not found in build output, fetching from EAS..."
+            eas build:view ${{ steps.build_android.outputs.build_id }} --json > build_android_view.json
+            cat build_android_view.json
+            URL=$(node -e '
+              const fs = require("fs");
+              const data = JSON.parse(fs.readFileSync("build_android_view.json", "utf8"));
+              const root = Array.isArray(data) ? data[0] : data;
+              const url = root.artifacts?.buildUrl || root.buildUrl || root.applicationArchiveUrl || "";
+              if (url) console.log(url);
+            ')
           fi
-          echo \"url=$URL\" >> $GITHUB_OUTPUT
+          if [ -z "$URL" ]; then
+            echo "[ERROR] Android artifact URL not found"
+            exit 1
+          fi
+          echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Download Android APK
-        run: curl -L \"${{ steps.android_artifact.outputs.url }}\" -o trace-android.apk
+        run: curl -L "${{ steps.android_artifact.outputs.url }}" -o trace-android.apk
 
       - name: Build iOS (EAS)
         id: build_ios
         run: |
-          BUILD_JSON=$(eas build --platform ios --profile preview --non-interactive --wait --json)
-          echo "$BUILD_JSON" > build_ios.json
-          BUILD_ID=$(python -c "import json;print(json.load(open('build_ios.json'))[0]['id'])")
+          eas build --platform ios --profile preview --non-interactive --wait --json > build_ios.json
+          BUILD_ID=$(node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync("build_ios.json","utf8"));const b=Array.isArray(d)?d[0]:d;console.log(b.id);')
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
 
       - name: Resolve iOS artifact
         id: ios_artifact
         run: |
-          BUILD_VIEW=$(eas build:view ${{ steps.build_ios.outputs.build_id }} --json)
-          echo "$BUILD_VIEW" > build_ios_view.json
-          URL=$(python -c "import json; d=json.load(open('build_ios_view.json')); a=d.get('artifacts') or {}; print(a.get('buildUrl') or a.get('applicationArchiveUrl') or a.get('artifactUrl') or a.get('url') or '')")
-          if [ -z \"$URL\" ]; then
-            echo \"[ERROR] iOS artifact URL not found\"; exit 1;
+          echo "=== build_ios.json content ==="
+          cat build_ios.json || echo "File not found"
+          echo "=== End of build_ios.json ==="
+          URL=$(node -e '
+            const fs = require("fs");
+            const data = JSON.parse(fs.readFileSync("build_ios.json", "utf8"));
+            const root = Array.isArray(data) ? data[0] : data;
+            const url = root.artifacts?.buildUrl || root.buildUrl || root.applicationArchiveUrl || "";
+            if (url) console.log(url);
+          ')
+          if [ -z "$URL" ]; then
+            echo "URL not found in build output, fetching from EAS..."
+            eas build:view ${{ steps.build_ios.outputs.build_id }} --json > build_ios_view.json
+            cat build_ios_view.json
+            URL=$(node -e '
+              const fs = require("fs");
+              const data = JSON.parse(fs.readFileSync("build_ios_view.json", "utf8"));
+              const root = Array.isArray(data) ? data[0] : data;
+              const url = root.artifacts?.buildUrl || root.buildUrl || root.applicationArchiveUrl || "";
+              if (url) console.log(url);
+            ')
           fi
-          echo \"url=$URL\" >> $GITHUB_OUTPUT
+          if [ -z "$URL" ]; then
+            echo "[ERROR] iOS artifact URL not found"
+            exit 1
+          fi
+          echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Download iOS IPA
-        run: curl -L \"${{ steps.ios_artifact.outputs.url }}\" -o trace-ios.ipa
+        run: curl -L "${{ steps.ios_artifact.outputs.url }}" -o trace-ios.ipa
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4

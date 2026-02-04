@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -26,6 +26,7 @@ import { Layout } from '../constants';
 import { RootStackParamList, DiaryEntry, DiaryTemplate } from '../types';
 import { formatDateId, formatDateDisplay, formatTime, countWords } from '../utils/dateUtils';
 import { saveImage, deleteImages, getImageUri } from '../utils/imageStorage';
+import { getEntryImages } from '../utils/entryUtils';
 import { saveDraft, getDraft, clearDraft, getTagPresets } from '../api/storage';
 
 const MAX_IMAGES = 9;
@@ -45,12 +46,6 @@ const WRITING_PROMPTS = [
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Editor'>;
 type EditorRouteProp = RouteProp<RootStackParamList, 'Editor'>;
-
-const getInitialImages = (entry: DiaryEntry | null | undefined): string[] => {
-  if (!entry) return [];
-  if (entry.images && entry.images.length > 0) return entry.images;
-  return [];
-};
 
 interface HistoryState {
   content: string;
@@ -82,7 +77,7 @@ export function EditorScreen() {
   const [content, setContent] = useState(existingEntry?.content || '');
   const [mood, setMood] = useState<string | undefined>(existingEntry?.mood);
   const [weather, setWeather] = useState<string | undefined>(existingEntry?.weather);
-  const [images, setImages] = useState<string[]>(getInitialImages(existingEntry));
+  const [images, setImages] = useState<string[]>(getEntryImages(existingEntry));
   const [tags, setTags] = useState<string[]>(existingEntry?.tags || []);
   const [templateUsed, setTemplateUsed] = useState<string | undefined>(existingEntry?.templateUsed);
   const [showTemplateModal, setShowTemplateModal] = useState(!isEditing && !content);
@@ -105,7 +100,7 @@ export function EditorScreen() {
   const [dialogAnswers, setDialogAnswers] = useState<string[]>([]);
   const [currentAnswer, setCurrentAnswer] = useState('');
 
-  const [history, setHistory] = useState<HistoryState[]>([{ content: existingEntry?.content || '', images: getInitialImages(existingEntry) }]);
+  const [history, setHistory] = useState<HistoryState[]>([{ content: existingEntry?.content || '', images: getEntryImages(existingEntry) }]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const historyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [draftChecked, setDraftChecked] = useState(false);

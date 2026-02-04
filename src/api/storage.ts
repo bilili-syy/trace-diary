@@ -58,7 +58,7 @@ const STORAGE_KEYS = {
 
 // ============ 日记条目相关 ============
 
-// 获取所有日记条目
+// 获取所有日记条�?
 export const getAllEntries = (): DiaryEntry[] => {
   try {
     const data = getStorage().getString(STORAGE_KEYS.DIARY_ENTRIES);
@@ -70,7 +70,7 @@ export const getAllEntries = (): DiaryEntry[] => {
   }
 };
 
-// 保存所有日记条目
+// 保存所有日记条�?
 export const saveAllEntries = (entries: DiaryEntry[]): void => {
   try {
     getStorage().set(STORAGE_KEYS.DIARY_ENTRIES, JSON.stringify(entries));
@@ -105,12 +105,12 @@ export const deleteEntry = (id: string): void => {
   saveAllEntries(filtered);
 };
 
-// 按日期获取日记
+// 按日期获取日�?
 export const getEntriesByDate = (dateId: string): DiaryEntry | null => {
   return getEntryById(dateId);
 };
 
-// 获取指定月份的所有日记
+// 获取指定月份的所有日�?
 export const getEntriesByMonth = (year: number, month: number): DiaryEntry[] => {
   const entries = getAllEntries();
   return entries.filter((entry) => {
@@ -121,27 +121,27 @@ export const getEntriesByMonth = (year: number, month: number): DiaryEntry[] => 
 
 // ============ 应用设置相关 ============
 
-// 获取应用锁状态
+// 获取应用锁状�?
 export const getAppLockEnabled = (): boolean => {
   return getStorage().getBoolean(STORAGE_KEYS.IS_APP_LOCK_ENABLED) ?? false;
 };
 
-// 设置应用锁状态
+// 设置应用锁状�?
 export const setAppLockEnabled = (enabled: boolean): void => {
   getStorage().set(STORAGE_KEYS.IS_APP_LOCK_ENABLED, enabled);
 };
 
-// 获取 PIN 码哈希
+// 获取 PIN 码哈�?
 export const getPinHash = (): string | null => {
   return getStorage().getString(STORAGE_KEYS.PIN_HASH) ?? null;
 };
 
-// 设置 PIN 码哈希
+// 设置 PIN 码哈�?
 export const setPinHash = (hash: string): void => {
   getStorage().set(STORAGE_KEYS.PIN_HASH, hash);
 };
 
-// 清除 PIN 码
+// 清除 PIN �?
 export const clearPin = (): void => {
   getStorage().delete(STORAGE_KEYS.PIN_HASH);
 };
@@ -185,21 +185,21 @@ export const setOnboardingDone = (done: boolean): void => {
   getStorage().set(STORAGE_KEYS.ONBOARDING_DONE, done);
 };
 
-// ============ 鏍囩棰勮 ============ 
+// ============ 标签预设 ============
 
 const DEFAULT_TAG_PRESETS = [
-  '鏃ュ父',
-  '蹇冩儏',
-  '宸ヤ綔',
-  '瀛︿範',
-  '鏃呰',
-  '瀹跺涵',
-  '鍋ュ悍',
-  '缇庨',
-  '杩愬姩',
-  '鐏垫劅',
-  '鎰熸仼',
-  '闃呰',
+  '日常',
+  '心情',
+  '工作',
+  '学习',
+  '旅行',
+  '家庭',
+  '健康',
+  '美食',
+  '运动',
+  '灵感',
+  '感恩',
+  '阅读',
 ];
 
 export const getTagPresets = (): string[] => {
@@ -210,8 +210,15 @@ export const getTagPresets = (): string[] => {
   }
   try {
     const parsed = JSON.parse(data);
-    const cleaned = Array.isArray(parsed) ? parsed.filter((t) => typeof t === 'string') : [];
+    const cleaned = Array.isArray(parsed)
+      ? parsed.filter((t) => typeof t === 'string' && t.trim().length > 0)
+      : [];
     if (cleaned.length === 0) return [];
+    const looksCorrupted = cleaned.every((tag) => tag.includes('?') || tag.includes('\uFFFD'));
+    if (looksCorrupted) {
+      getStorage().set(STORAGE_KEYS.TAG_PRESETS, JSON.stringify(DEFAULT_TAG_PRESETS));
+      return [...DEFAULT_TAG_PRESETS];
+    }
     return cleaned;
   } catch {
     getStorage().set(STORAGE_KEYS.TAG_PRESETS, JSON.stringify(DEFAULT_TAG_PRESETS));
@@ -225,7 +232,7 @@ export const setTagPresets = (tags: string[]): void => {
 
 // ============ 导入导出相关 ============
 
-// 导出所有数据
+// 导出所有数�?
 export const exportAllData = (): ExportData => {
   const entries = getAllEntries();
   return {
@@ -250,7 +257,7 @@ export const importDataMerge = (data: ExportData): void => {
   saveAllEntries(mergedEntries);
 };
 
-// 清除所有数据
+// 清除所有数�?
 export const clearAllData = (): void => {
   getStorage().clearAll();
 };
@@ -287,3 +294,4 @@ export const getDraft = (): DraftData | null => {
 export const clearDraft = (): void => {
   getStorage().delete(DRAFT_KEY);
 };
+

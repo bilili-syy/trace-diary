@@ -9,7 +9,7 @@ import {
   importDataMerge,
   exportAllData,
 } from '../api/storage';
-import { formatDateId, isSameDayCheck } from '../utils/dateUtils';
+import { formatDateId } from '../utils/dateUtils';
 import { deleteImages } from '../utils/imageStorage';
 
 // 日记状态接口

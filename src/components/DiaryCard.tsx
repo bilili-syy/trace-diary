@@ -7,36 +7,13 @@ import { useTheme } from '../context/ThemeProvider';
 import { formatDateDisplay, formatWeekday } from '../utils/dateUtils';
 import { WEATHER_OPTIONS } from '../constants/Styles';
 import { getImageUri } from '../utils/imageStorage';
+import { getEntryImages, stripMarkdown } from '../utils/entryUtils';
 
 interface DiaryCardProps {
   entry: DiaryEntry;
   onPress: () => void;
   onLongPress?: () => void;
 }
-
-const getEntryImages = (entry: DiaryEntry): string[] => {
-  if (entry.images && entry.images.length > 0) return entry.images;
-  if (entry.imageBase64) return [entry.imageBase64];
-  return [];
-};
-
-const stripMarkdown = (text: string): string => {
-  return text
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/\*(.+?)\*/g, '$1')
-    .replace(/__(.+?)__/g, '$1')
-    .replace(/_(.+?)_/g, '$1')
-    .replace(/~~(.+?)~~/g, '$1')
-    .replace(/`(.+?)`/g, '$1')
-    .replace(/^\s*[-*+]\s+/gm, '')
-    .replace(/^\s*\d+\.\s+/gm, '')
-    .replace(/^\s*>\s+/gm, '')
-    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
-    .replace(/!\[.*?\]\(.+?\)/g, '')
-    .replace(/\n{2,}/g, '\n')
-    .trim();
-};
 
 export function DiaryCard({ entry, onPress, onLongPress }: DiaryCardProps) {
   const { colors } = useTheme();
