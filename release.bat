@@ -27,6 +27,37 @@ if errorlevel 1 (
     echo [INFO] Version adjusted to %VERSION% to match tag trigger (v*)
 )
 
+:: Normalize version for app.json (strip leading v if any)
+set VERSION_CLEAN=%VERSION%
+echo %VERSION_CLEAN% | findstr /b /i "v" >nul
+if errorlevel 1 (
+    rem keep as is
+) else (
+    set VERSION_CLEAN=%VERSION_CLEAN:~1%
+)
+
+for /f "tokens=1-3 delims=." %%a in ("%VERSION_CLEAN%") do (
+    set MAJOR=%%a
+    set MINOR=%%b
+    set PATCH=%%c
+)
+
+if "%PATCH%"=="" set PATCH=0
+
+for /f "delims=0123456789" %%i in ("%MAJOR%%MINOR%%PATCH%") do (
+    echo [ERROR] Invalid version format: %VERSION_CLEAN%
+    exit /b 1
+)
+
+set /a VERSION_CODE=%MAJOR%*10000 + %MINOR%*100 + %PATCH%
+
+echo [INFO] Syncing app version: %VERSION_CLEAN% (code %VERSION_CODE%)
+powershell -NoProfile -Command "$path='app.json'; $json=Get-Content $path -Raw | ConvertFrom-Json; $json.expo.version='%VERSION_CLEAN%'; if (-not $json.expo.android) { $json.expo | Add-Member -NotePropertyName android -NotePropertyValue (@{}) -Force }; $json.expo.android.versionCode=%VERSION_CODE%; if (-not $json.expo.ios) { $json.expo | Add-Member -NotePropertyName ios -NotePropertyValue (@{}) -Force }; $json.expo.ios.buildNumber='%VERSION_CODE%'; $json | ConvertTo-Json -Depth 20 | Set-Content $path"
+if errorlevel 1 (
+    echo [ERROR] Failed to update app.json
+    exit /b 1
+)
+
 echo [INFO] Preparing release: %VERSION%
 echo [INFO] Commit message: %MESSAGE%
 echo.

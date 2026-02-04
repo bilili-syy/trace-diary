@@ -979,7 +979,7 @@ export function EditorScreen() {
         >
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>??????</Text>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>添加标签</Text>
               <TouchableOpacity onPress={() => setShowTagModal(false)}>
                 <Feather name="x" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
@@ -992,19 +992,19 @@ export function EditorScreen() {
               <View style={styles.tagInputRow}>
                 <TextInput
                   style={[styles.tagInput, { backgroundColor: colors.inputBackground, color: colors.textPrimary }]}
-                  placeholder="?????????"
+                  placeholder="输入标签名称"
                   placeholderTextColor={colors.textMuted}
                   value={newTag}
                   onChangeText={setNewTag}
                   onSubmitEditing={addTag}
                 />
                 <TouchableOpacity style={[styles.tagAddButton, { backgroundColor: colors.primary }]} onPress={addTag}>
-                  <Text style={styles.tagAddButtonText}>???</Text>
+                  <Text style={styles.tagAddButtonText}>添加</Text>
                 </TouchableOpacity>
               </View>
               {presetTags.length > 0 && (
                 <View style={styles.tagSection}>
-                  <Text style={[styles.tagSectionTitle, { color: colors.textSecondary }]}>??????</Text>
+                  <Text style={[styles.tagSectionTitle, { color: colors.textSecondary }]}>预设标签</Text>
                   <View style={styles.tagSuggestionList}>
                     {presetTags.map((tag) => (
                       <TouchableOpacity
@@ -1021,7 +1021,7 @@ export function EditorScreen() {
               )}
               {suggestedTags.length > 0 && (
                 <View style={styles.tagSection}>
-                  <Text style={[styles.tagSectionTitle, { color: colors.textSecondary }]}>??????</Text>
+                  <Text style={[styles.tagSectionTitle, { color: colors.textSecondary }]}>常用标签</Text>
                   <View style={styles.tagSuggestionList}>
                     {suggestedTags.map((tag) => (
                       <TouchableOpacity

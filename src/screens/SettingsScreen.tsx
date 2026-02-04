@@ -590,12 +590,12 @@ export function SettingsScreen() {
           )}
         </View>
 
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>???</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>写作</Text>
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <SettingsItem
             icon="tag"
-            title="??????"
-            subtitle={tagPresets.length > 0 ? `?????${tagPresets.length} ?????` : '???????????'}
+            title="标签管理"
+            subtitle={tagPresets.length > 0 ? `已设置${tagPresets.length} 个标签` : '未设置常用标签'}
             onPress={() => setTagModalVisible(true)}
           />
         </View>
@@ -728,7 +728,7 @@ export function SettingsScreen() {
           />
           <View style={[styles.themeModalContent, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.themeModalHeader}>
-              <Text style={[styles.themeModalTitle, { color: colors.textPrimary }]}>??????</Text>
+              <Text style={[styles.themeModalTitle, { color: colors.textPrimary }]}>标签管理</Text>
               <TouchableOpacity onPress={() => setTagModalVisible(false)}>
                 <Feather name="x" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
@@ -736,18 +736,18 @@ export function SettingsScreen() {
             <View style={styles.tagPresetInputRow}>
               <TextInput
                 style={[styles.tagPresetInput, { backgroundColor: colors.inputBackground, color: colors.textPrimary }]}
-                placeholder="?????????"
+                placeholder="输入标签名称"
                 placeholderTextColor={colors.textMuted}
                 value={newTagPreset}
                 onChangeText={setNewTagPreset}
                 onSubmitEditing={addTagPreset}
               />
               <TouchableOpacity style={[styles.tagPresetAddButton, { backgroundColor: colors.primary }]} onPress={addTagPreset}>
-                <Text style={styles.tagPresetAddButtonText}>???</Text>
+                <Text style={styles.tagPresetAddButtonText}>添加</Text>
               </TouchableOpacity>
             </View>
             {tagPresets.length === 0 ? (
-              <Text style={[styles.tagPresetEmpty, { color: colors.textMuted }]}>???????????????????????????</Text>
+              <Text style={[styles.tagPresetEmpty, { color: colors.textMuted }]}>暂无标签，添加一个带到写作中快捷使用</Text>
             ) : (
               <View style={styles.tagPresetList}>
                 {tagPresets.map((tag) => (

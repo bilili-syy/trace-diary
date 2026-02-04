@@ -1,8 +1,7 @@
-name: Build Android APK
+name: Build Release (Android + iOS)
 
 on:
   push:
-    branches: [master]
     tags:
       - 'v*'
   workflow_dispatch:
@@ -21,25 +20,6 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Cache Expo
-        uses: actions/cache@v4
-        with:
-          path: ~/.expo
-          key: ${{ runner.os }}-expo-${{ hashFiles('package-lock.json') }}
-          restore-keys: ${{ runner.os }}-expo-
-
-      - name: Install dependencies
-        run: npm ci
-
       - name: Setup Expo
         uses: expo/expo-github-action@v8
         with:
@@ -47,34 +27,53 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Prebuild Android
-        run: npx expo prebuild --platform android --clean --no-install
+      - name: Build Android (EAS)
+        id: build_android
+        run: |
+          BUILD_JSON=$(eas build --platform android --profile preview --non-interactive --wait --json)
+          echo "$BUILD_JSON" > build_android.json
+          BUILD_ID=$(python - <<'PY'
+import json
+data=json.load(open('build_android.json'))
+print(data[0]['id'])
+PY
+)
+          echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
 
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            android/.gradle
-          key: ${{ runner.os }}-gradle-${{ hashFiles('android/**/*.gradle*', 'android/gradle-wrapper.properties') }}
-          restore-keys: ${{ runner.os }}-gradle-
+      - name: Download Android APK
+        run: eas build:download --platform android --id ${{ steps.build_android.outputs.build_id }} --output trace-android.apk
 
-      - name: Build APK
-        working-directory: android
-        run: ./gradlew assembleRelease --build-cache
+      - name: Build iOS (EAS)
+        id: build_ios
+        run: |
+          BUILD_JSON=$(eas build --platform ios --profile preview --non-interactive --wait --json)
+          echo "$BUILD_JSON" > build_ios.json
+          BUILD_ID=$(python - <<'PY'
+import json
+data=json.load(open('build_ios.json'))
+print(data[0]['id'])
+PY
+)
+          echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
 
-      - name: Upload APK
+      - name: Download iOS IPA
+        run: eas build:download --platform ios --id ${{ steps.build_ios.outputs.build_id }} --output trace-ios.ipa
+
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: trace-release
-          path: android/app/build/outputs/apk/release/*.apk
+          path: |
+            trace-android.apk
+            trace-ios.ipa
           retention-days: 30
 
       - name: Upload to Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: android/app/build/outputs/apk/release/*.apk
+          files: |
+            trace-android.apk
+            trace-ios.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

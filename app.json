@@ -1,61 +1,63 @@
 {
-  "expo": {
-    "name": "素履",
-    "slug": "trace-diary",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F4F4F8"
-    },
-    "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSFaceIDUsageDescription": "使用 Face ID 解锁素履",
-        "NSPhotoLibraryUsageDescription": "允许素履访问相册以添加图片到日记"
-      }
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#F4F4F8"
-      },
-      "edgeToEdgeEnabled": true,
-      "permissions": [
-        "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT",
-        "android.permission.RECORD_AUDIO"
-      ],
-      "package": "com.trace.diary"
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      [
-        "expo-local-authentication",
-        {
-          "faceIDPermission": "使用 Face ID 解锁素履"
-        }
-      ],
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "允许素履访问相册以添加图片到日记"
-        }
-      ],
-      "expo-notifications",
-      "expo-secure-store"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "60ea3e3f-a8c4-446e-acb0-4c08aa7d3ff1"
-      }
-    },
-    "owner": "duxjzb"
-  }
+    "expo":  {
+                 "name":  "素履",
+                 "slug":  "trace-diary",
+                 "version":  "1.0.0",
+                 "orientation":  "portrait",
+                 "icon":  "./assets/icon.png",
+                 "userInterfaceStyle":  "light",
+                 "newArchEnabled":  true,
+                 "splash":  {
+                                "image":  "./assets/splash-icon.png",
+                                "resizeMode":  "contain",
+                                "backgroundColor":  "#F4F4F8"
+                            },
+                 "ios":  {
+                             "supportsTablet":  true,
+                             "buildNumber":  "10000",
+                             "infoPlist":  {
+                                               "NSFaceIDUsageDescription":  "使用 Face ID 解锁素履",
+                                               "NSPhotoLibraryUsageDescription":  "允许素履访问相册以添加图片到日记"
+                                           }
+                         },
+                 "android":  {
+                                 "versionCode":  10000,
+                                 "adaptiveIcon":  {
+                                                      "foregroundImage":  "./assets/adaptive-icon.png",
+                                                      "backgroundColor":  "#F4F4F8"
+                                                  },
+                                 "edgeToEdgeEnabled":  true,
+                                 "permissions":  [
+                                                     "android.permission.USE_BIOMETRIC",
+                                                     "android.permission.USE_FINGERPRINT",
+                                                     "android.permission.RECORD_AUDIO"
+                                                 ],
+                                 "package":  "com.trace.diary"
+                             },
+                 "web":  {
+                             "favicon":  "./assets/favicon.png"
+                         },
+                 "plugins":  [
+                                 [
+                                     "expo-local-authentication",
+                                     {
+                                         "faceIDPermission":  "使用 Face ID 解锁素履"
+                                     }
+                                 ],
+                                 [
+                                     "expo-image-picker",
+                                     {
+                                         "photosPermission":  "允许素履访问相册以添加图片到日记"
+                                     }
+                                 ],
+                                 "expo-notifications",
+                                 "expo-secure-store"
+                             ],
+                 "extra":  {
+                               "eas":  {
+                                           "projectId":  "60ea3e3f-a8c4-446e-acb0-4c08aa7d3ff1"
+                                       }
+                           },
+                 "owner":  "duxjzb"
+             }
 }
