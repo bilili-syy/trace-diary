@@ -10,12 +10,16 @@ echo ========================================
 echo.
 
 if "%VERSION%"=="" (
-    echo [ERROR] Missing version parameter
-    echo.
-    echo Usage: release.bat ^<version^> [message]
-    echo Example: release.bat v1.0.0 "First release"
-    echo.
+    set /p VERSION=Enter version e.g. 1.0.1: 
+)
+
+if "%VERSION%"=="" (
+    echo [ERROR] Version is required
     exit /b 1
+)
+
+if "%MESSAGE%"=="" (
+    set /p MESSAGE=Enter commit message: 
 )
 
 if "%MESSAGE%"=="" set MESSAGE=Release %VERSION%
@@ -24,7 +28,7 @@ if "%MESSAGE%"=="" set MESSAGE=Release %VERSION%
 echo %VERSION% | findstr /b /i "v" >nul
 if errorlevel 1 (
     set VERSION=v%VERSION%
-    echo [INFO] Version adjusted to %VERSION% to match tag trigger (v*)
+    echo [INFO] Version adjusted to %VERSION% to match tag trigger (v*^)
 )
 
 :: Normalize version for app.json (strip leading v if any)
@@ -74,11 +78,6 @@ if !HAS_CHANGES!==1 (
     echo.
     git status --short
     echo.
-    set /p COMMIT_CHOICE="Commit these changes? (Y/n): "
-    if /i "!COMMIT_CHOICE!"=="n" (
-        echo [CANCEL] Release cancelled
-        exit /b 1
-    )
     echo [RUN] Committing changes...
     git add .
     git commit -m "%MESSAGE%"
@@ -107,47 +106,24 @@ if errorlevel 1 (
 echo [DONE] Code pushed
 echo.
 
-:: Check if tag exists
+:: Check if tag exists (local/remote) and replace automatically
 echo [CHECK] Checking if tag exists...
 git rev-parse %VERSION% >nul 2>&1
 if !errorlevel!==0 (
-    echo [WARN] Tag %VERSION% already exists!
-    echo.
-    echo Choose action:
-    echo   1. Delete old tag and create new one
-    echo   2. Keep old tag and cancel release
-    echo   3. Enter new version number
-    echo.
-    set /p TAG_CHOICE="Enter option (1/2/3): "
-    
-    if "!TAG_CHOICE!"=="1" (
-        echo [RUN] Deleting old tag...
-        git tag -d %VERSION%
-        git push origin --delete %VERSION% 2>nul
-        if errorlevel 1 (
-            echo [WARN] Remote tag may not exist, continuing...
-        )
-        echo [DONE] Old tag deleted
-    ) else if "!TAG_CHOICE!"=="3" (
-        echo.
-        set /p NEW_VERSION="Enter new version: "
-        if "!NEW_VERSION!"=="" (
-            echo [ERROR] Version cannot be empty
-            exit /b 1
-        )
-        set VERSION=!NEW_VERSION!
-        echo !VERSION! | findstr /b /i "v" >nul
-        if errorlevel 1 (
-            set VERSION=v!VERSION!
-            echo [INFO] Version adjusted to !VERSION! to match tag trigger (v*)
-        )
-        echo [INFO] Using new version: !VERSION!
-    ) else (
-        echo [CANCEL] Keeping old tag, release cancelled
-        exit /b 0
-    )
-    echo.
+    echo [PASS] Local tag not found
+) else (
+    echo [WARN] Local tag %VERSION% exists, replacing...
+    git tag -d %VERSION% >nul 2>&1
 )
+
+git ls-remote --tags origin %VERSION% | findstr %VERSION% >nul
+if !errorlevel!==0 (
+    echo [PASS] Remote tag not found
+) else (
+    echo [WARN] Remote tag %VERSION% exists, replacing...
+    git push origin :refs/tags/%VERSION% 2>nul
+)
+echo.
 
 :: Create new tag
 echo [RUN] Creating tag %VERSION%...
