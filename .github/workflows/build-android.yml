@@ -32,12 +32,7 @@ jobs:
         run: |
           BUILD_JSON=$(eas build --platform android --profile preview --non-interactive --wait --json)
           echo "$BUILD_JSON" > build_android.json
-          BUILD_ID=$(python - <<'PY'
-import json
-data=json.load(open('build_android.json'))
-print(data[0]['id'])
-PY
-)
+          BUILD_ID=$(python -c "import json;print(json.load(open('build_android.json'))[0]['id'])")
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
 
       - name: Download Android APK
@@ -48,12 +43,7 @@ PY
         run: |
           BUILD_JSON=$(eas build --platform ios --profile preview --non-interactive --wait --json)
           echo "$BUILD_JSON" > build_ios.json
-          BUILD_ID=$(python - <<'PY'
-import json
-data=json.load(open('build_ios.json'))
-print(data[0]['id'])
-PY
-)
+          BUILD_ID=$(python -c "import json;print(json.load(open('build_ios.json'))[0]['id'])")
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
 
       - name: Download iOS IPA
