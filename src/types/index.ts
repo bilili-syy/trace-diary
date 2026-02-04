@@ -83,7 +83,7 @@ export type RootStackParamList = {
 export type MainTabParamList = {
   Home: undefined;
   Calendar: undefined;
-  Settings: { open?: 'theme' | 'reminder' | 'appLock' } | undefined;
+  Settings: { open?: 'theme' | 'reminder' | 'appLock' | undefined };
 };
 
 // 导出/导入数据结构

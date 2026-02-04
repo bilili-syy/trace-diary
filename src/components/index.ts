@@ -7,3 +7,4 @@ export { WeatherPicker } from './WeatherPicker';
 export { SettingsItem } from './SettingsItem';
 export { MarkdownPreview } from './MarkdownPreview';
 export { MoodChart } from './MoodChart';
+export { ThemedAlert } from './ThemedAlert';

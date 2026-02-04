@@ -1,0 +1,73 @@
+diff --git a/node_modules/react-native-reanimated/Common/cpp/reanimated/Fabric/PropsRegistry.cpp b/node_modules/react-native-reanimated/Common/cpp/reanimated/Fabric/PropsRegistry.cpp
+index d11f7fa..8e25349 100644
+--- a/node_modules/react-native-reanimated/Common/cpp/reanimated/Fabric/PropsRegistry.cpp
++++ b/node_modules/react-native-reanimated/Common/cpp/reanimated/Fabric/PropsRegistry.cpp
+@@ -9,7 +9,7 @@ std::lock_guard<std::mutex> PropsRegistry::createLock() const {
+ }
+ 
+ void PropsRegistry::update(
+-    const ShadowNode::Shared &shadowNode,
++    const ShadowNodeShared &shadowNode,
+     folly::dynamic &&props) {
+   const auto tag = shadowNode->getTag();
+   const auto it = map_.find(tag);
+@@ -32,7 +32,7 @@ void PropsRegistry::for_each(std::function<void(
+   }
+ }
+ 
+-void PropsRegistry::markNodeAsRemovable(const ShadowNode::Shared &shadowNode) {
++void PropsRegistry::markNodeAsRemovable(const ShadowNodeShared &shadowNode) {
+   removableShadowNodes_[shadowNode->getTag()] = shadowNode;
+ }
+ 
+diff --git a/node_modules/react-native-reanimated/Common/cpp/reanimated/Fabric/PropsRegistry.h b/node_modules/react-native-reanimated/Common/cpp/reanimated/Fabric/PropsRegistry.h
+index 42a29b2..a100067 100644
+--- a/node_modules/react-native-reanimated/Common/cpp/reanimated/Fabric/PropsRegistry.h
++++ b/node_modules/react-native-reanimated/Common/cpp/reanimated/Fabric/PropsRegistry.h
+@@ -12,12 +12,14 @@ using namespace react;
+ 
+ namespace reanimated {
+ 
++using ShadowNodeShared = std::shared_ptr<const ShadowNode>;
++
+ class PropsRegistry {
+  public:
+   std::lock_guard<std::mutex> createLock() const;
+   // returns a lock you need to hold when calling any of the methods below
+ 
+-  void update(const ShadowNode::Shared &shadowNode, folly::dynamic &&props);
++  void update(const ShadowNodeShared &shadowNode, folly::dynamic &&props);
+ 
+   void for_each(std::function<void(
+                     const ShadowNodeFamily &family,
+@@ -49,13 +51,13 @@ class PropsRegistry {
+     return map_.empty();
+   }
+ 
+-  void markNodeAsRemovable(const ShadowNode::Shared &shadowNode);
++  void markNodeAsRemovable(const ShadowNodeShared &shadowNode);
+   void unmarkNodeAsRemovable(Tag viewTag);
+   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
+ 
+  private:
+-  std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>> map_;
+-  std::unordered_map<Tag, ShadowNode::Shared> removableShadowNodes_;
++  std::unordered_map<Tag, std::pair<ShadowNodeShared, folly::dynamic>> map_;
++  std::unordered_map<Tag, ShadowNodeShared> removableShadowNodes_;
+ 
+   mutable std::mutex mutex_; // Protects `map_`.
+ 
+diff --git a/node_modules/react-native-reanimated/Common/cpp/reanimated/NativeModules/ReanimatedModuleProxy.h b/node_modules/react-native-reanimated/Common/cpp/reanimated/NativeModules/ReanimatedModuleProxy.h
+index 40edc82..e2f821a 100644
+--- a/node_modules/react-native-reanimated/Common/cpp/reanimated/NativeModules/ReanimatedModuleProxy.h
++++ b/node_modules/react-native-reanimated/Common/cpp/reanimated/NativeModules/ReanimatedModuleProxy.h
+@@ -228,7 +228,8 @@ class ReanimatedModuleProxy
+   std::shared_ptr<UIManager> uiManager_;
+   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
+ 
+-  std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>
++  std::vector<
++      std::pair<std::shared_ptr<const ShadowNode>, std::unique_ptr<jsi::Value>>>
+       operationsInBatch_; // TODO: refactor std::pair to custom struct
+ 
+   std::shared_ptr<PropsRegistry> propsRegistry_;

@@ -7,28 +7,26 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   StatusBar,
-  ActionSheetIOS,
   Modal,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
-import { MoodPicker, WeatherPicker, TemplateModal, MarkdownPreview } from '../components';
+import { MoodPicker, WeatherPicker, TemplateModal, MarkdownPreview, ThemedAlert } from '../components';
 import { useDiary } from '../context';
 import { useTheme } from '../context/ThemeProvider';
-import { useDebounce } from '../hooks';
+import { useDebounce, useThemedAlert } from '../hooks';
 import { Layout } from '../constants';
 import { RootStackParamList, DiaryEntry, DiaryTemplate } from '../types';
 import { formatDateId, formatDateDisplay, formatTime, countWords } from '../utils/dateUtils';
 import { saveImage, deleteImages, getImageUri } from '../utils/imageStorage';
-import { saveDraft, getDraft, clearDraft } from '../api/storage';
+import { saveDraft, getDraft, clearDraft, getTagPresets } from '../api/storage';
 
 const MAX_IMAGES = 9;
 
@@ -62,21 +60,21 @@ interface HistoryState {
 export function EditorScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<EditorRouteProp>();
-  const { getEntryById, addEntry, updateEntry, deleteEntry } = useDiary();
+  const { state, getEntryById, addEntry, updateEntry, deleteEntry } = useDiary();
   const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
+  const { showAlert, alertConfig, hideAlert } = useThemedAlert();
 
   const entryId = route.params?.entryId;
   const dateParam = route.params?.date;
   const initialDate = dateParam || formatDateId(new Date());
   const [draftOnlyMode, setDraftOnlyMode] = useState(route.params?.draftOnly ?? false);
-  const [ignoreExistingEntry, setIgnoreExistingEntry] = useState(false);
-  const [conflictChecked, setConflictChecked] = useState(false);
   
   const existingEntryById = entryId ? getEntryById(entryId) : null;
   const existingEntryByDate = !entryId ? getEntryById(initialDate) : null;
   const existingEntry = entryId
     ? existingEntryById
-    : (draftOnlyMode || ignoreExistingEntry ? null : existingEntryByDate);
+    : (draftOnlyMode ? null : existingEntryByDate);
   
   const isEditing = !!existingEntry && !draftOnlyMode;
   const diaryId = entryId || initialDate;
@@ -93,6 +91,7 @@ export function EditorScreen() {
   const [showPreview, setShowPreview] = useState(false);
   const [writingMode, setWritingMode] = useState(false);
   const [showSortModal, setShowSortModal] = useState(false);
+  const [tagPresets, setTagPresets] = useState<string[]>(() => getTagPresets());
   const [newTag, setNewTag] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -111,69 +110,30 @@ export function EditorScreen() {
   const historyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [draftChecked, setDraftChecked] = useState(false);
 
+  const presetTags = useMemo(() => {
+    return tagPresets.filter((tag) => !tags.includes(tag));
+  }, [tagPresets, tags]);
+
+  const suggestedTags = useMemo(() => {
+    const tagCounts = new Map<string, number>();
+    state.entries.forEach((entry) => {
+      entry.tags?.forEach((tag) => {
+        tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+      });
+    });
+    return Array.from(tagCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([tag]) => tag)
+      .filter((tag) => !tags.includes(tag) && !tagPresets.includes(tag))
+      .slice(0, 12);
+  }, [state.entries, tags, tagPresets]);
+
   useEffect(() => {
     if (existingEntry) {
       originalEntryRef.current = existingEntry;
     }
   }, [existingEntry?.id]);
 
-  useEffect(() => {
-    if (entryId || conflictChecked || draftOnlyMode) return;
-    if (!existingEntryByDate) {
-      setConflictChecked(true);
-      return;
-    }
-
-    Alert.alert(
-      '今天已有日记',
-      '请选择处理方式：',
-      [
-        {
-          text: '取消',
-          style: 'cancel',
-          onPress: () => {
-            setConflictChecked(true);
-            navigation.goBack();
-          },
-        },
-        {
-          text: '覆盖编辑',
-          onPress: () => {
-            setConflictChecked(true);
-          },
-        },
-        {
-          text: '合并内容',
-          onPress: () => {
-            setContent(`${existingEntryByDate.content}\n\n---\n\n`);
-            setShowTemplateModal(false);
-            setHasChanges(true);
-            setHistory([{ content: `${existingEntryByDate.content}\n\n---\n\n`, images: getInitialImages(existingEntryByDate) }]);
-            setHistoryIndex(0);
-            setConflictChecked(true);
-          },
-        },
-        {
-          text: '另存为草稿',
-          onPress: () => {
-            setIgnoreExistingEntry(true);
-            setDraftOnlyMode(true);
-            setContent('');
-            setMood(undefined);
-            setWeather(undefined);
-            setImages([]);
-            setTags([]);
-            setTemplateUsed(undefined);
-            setShowTemplateModal(true);
-            setHasChanges(false);
-            setHistory([{ content: '', images: [] }]);
-            setHistoryIndex(0);
-            setConflictChecked(true);
-          },
-        },
-      ]
-    );
-  }, [entryId, conflictChecked, draftOnlyMode, existingEntryByDate, navigation]);
 
   useEffect(() => {
     if (draftChecked) return;
@@ -207,7 +167,7 @@ export function EditorScreen() {
     }
 
     if (existingEntry) {
-      Alert.alert(
+      showAlert(
         '发现草稿',
         '检测到同一天的草稿内容，是否合并到当前日记？',
         [
@@ -260,7 +220,7 @@ export function EditorScreen() {
         ]
       );
     } else {
-      Alert.alert(
+      showAlert(
         '发现草稿',
         '是否恢复上次未保存的内容？',
         [
@@ -290,6 +250,12 @@ export function EditorScreen() {
       );
     }
   }, [diaryId, existingEntry, draftChecked, draftOnlyMode]);
+
+  useEffect(() => {
+    if (showTagModal) {
+      setTagPresets(getTagPresets());
+    }
+  }, [showTagModal]);
 
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
@@ -439,7 +405,7 @@ export function EditorScreen() {
   };
   
   const exitDialogMode = () => {
-    Alert.alert('退出引导', '确定要退出模板引导吗？已回答的内容将保留。', [
+    showAlert('退出引导', '确定要退出模板引导吗？已回答的内容将保留。', [
       { text: '取消', style: 'cancel' },
       {
         text: '退出',
@@ -463,7 +429,7 @@ export function EditorScreen() {
   const handleTemplateSelect = (template: DiaryTemplate) => {
     if (content.trim() && content.trim() !== existingEntry?.content?.trim()) {
       pendingTemplateRef.current = template;
-      Alert.alert(
+      showAlert(
         '切换模板',
         '切换模板会清除当前内容，确定要继续吗？',
         [
@@ -487,14 +453,14 @@ export function EditorScreen() {
 
   const pickFromLibrary = async () => {
     if (images.length >= MAX_IMAGES) {
-      Alert.alert('提示', `最多只能添加 ${MAX_IMAGES} 张图片`);
+      showAlert('提示', `最多只能添加 ${MAX_IMAGES} 张图片`);
       return;
     }
 
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('权限提示', '需要访问相册权限才能添加图片');
+        showAlert('权限提示', '需要访问相册权限才能添加图片');
         return;
       }
 
@@ -522,21 +488,21 @@ export function EditorScreen() {
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert('错误', '选择图片时出错');
+      showAlert('错误', '选择图片时出错');
       setIsSaving(false);
     }
   };
 
   const takePhoto = async () => {
     if (images.length >= MAX_IMAGES) {
-      Alert.alert('提示', `最多只能添加 ${MAX_IMAGES} 张图片`);
+      showAlert('提示', `最多只能添加 ${MAX_IMAGES} 张图片`);
       return;
     }
 
     try {
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('权限提示', '需要相机权限才能拍照');
+        showAlert('权限提示', '需要相机权限才能拍照');
         return;
       }
 
@@ -557,34 +523,14 @@ export function EditorScreen() {
       }
     } catch (error) {
       console.error('Error taking photo:', error);
-      Alert.alert('错误', '拍照时出错');
+      showAlert('错误', '拍照时出错');
       setIsSaving(false);
     }
   };
 
-  const showImageOptions = () => {
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['取消', '拍照', '从相册选择'],
-          cancelButtonIndex: 0,
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 1) takePhoto();
-          else if (buttonIndex === 2) pickFromLibrary();
-        }
-      );
-    } else {
-      Alert.alert('添加图片', '请选择方式', [
-        { text: '取消', style: 'cancel' },
-        { text: '拍照', onPress: takePhoto },
-        { text: '从相册选择', onPress: pickFromLibrary },
-      ]);
-    }
-  };
 
   const removeImage = (index: number) => {
-    Alert.alert('删除图片', '确定要删除这张图片吗？', [
+    showAlert('删除图片', '确定要删除这张图片吗？', [
       { text: '取消', style: 'cancel' },
       { 
         text: '删除', 
@@ -603,31 +549,38 @@ export function EditorScreen() {
     ]);
   };
 
-  const renderSortItem = useCallback(({ item, drag, isActive, index }: RenderItemParams<string>) => (
-    <TouchableOpacity
-      style={[
-        styles.sortItem,
-        { borderColor: isActive ? colors.primary : colors.border, opacity: isActive ? 0.9 : 1 },
-      ]}
-      onLongPress={drag}
-      activeOpacity={0.9}
-    >
-      <Image source={{ uri: getImageUri(item) }} style={styles.sortImage} resizeMode="cover" />
-      <View style={[styles.sortHandle, { backgroundColor: colors.primary }]}>
-        <Feather name="move" size={14} color="#FFFFFF" />
-      </View>
-      <View style={styles.sortIndex}>
-        <Text style={styles.sortIndexText}>{index + 1}</Text>
-      </View>
-    </TouchableOpacity>
-  ), [colors]);
+  const renderSortItem = useCallback(({ item, drag, isActive, getIndex }: RenderItemParams<string>) => {
+    const index = getIndex() ?? 0;
+    return (
+      <TouchableOpacity
+        style={[
+          styles.sortItem,
+          { borderColor: isActive ? colors.primary : colors.border, opacity: isActive ? 0.9 : 1 },
+        ]}
+        onLongPress={drag}
+        activeOpacity={0.9}
+      >
+        <Image source={{ uri: getImageUri(item) }} style={styles.sortImage} resizeMode="cover" />
+        <View style={[styles.sortHandle, { backgroundColor: colors.primary }]}>
+          <Feather name="move" size={14} color="#FFFFFF" />
+        </View>
+        <View style={styles.sortIndex}>
+          <Text style={styles.sortIndexText}>{index + 1}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  }, [colors]);
 
-  const addTag = () => {
-    const trimmed = newTag.trim();
+  const addTagValue = (value: string) => {
+    const trimmed = value.trim();
     if (trimmed && !tags.includes(trimmed)) {
       setTags([...tags, trimmed]);
       setHasChanges(true);
     }
+  };
+
+  const addTag = () => {
+    addTagValue(newTag);
     setNewTag('');
   };
 
@@ -706,7 +659,7 @@ export function EditorScreen() {
     }
 
     if (hasChanges && content.trim()) {
-      Alert.alert(
+      showAlert(
         '退出编辑',
         '已自动保存当前内容，是否退出？',
         [
@@ -796,7 +749,7 @@ export function EditorScreen() {
       {dialogMode && currentTemplate ? (
         <KeyboardAvoidingView 
           style={styles.keyboardView}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <ScrollView 
             style={styles.scrollView}
@@ -869,12 +822,13 @@ export function EditorScreen() {
       ) : (
       <KeyboardAvoidingView 
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView 
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
         >
           {!writingMode && (
             <>
@@ -935,7 +889,7 @@ export function EditorScreen() {
                 {images.length < MAX_IMAGES && (
                   <TouchableOpacity 
                     style={[styles.addImageButton, { borderColor: colors.border }]}
-                    onPress={showImageOptions}
+                    onPress={pickFromLibrary}
                   >
                     <Feather name="plus" size={24} color={colors.textMuted} />
                     <Text style={[styles.addImageText, { color: colors.textMuted }]}>{images.length}/{MAX_IMAGES}</Text>
@@ -947,7 +901,16 @@ export function EditorScreen() {
         </ScrollView>
 
         {!writingMode && (
-          <View style={[styles.toolbar, { borderTopColor: colors.divider, backgroundColor: colors.cardBackground }]}>
+          <View
+            style={[
+              styles.toolbar,
+              {
+                borderTopColor: colors.divider,
+                backgroundColor: colors.cardBackground,
+                paddingBottom: Layout.spacing.sm + insets.bottom,
+              },
+            ]}
+          >
             <TouchableOpacity 
               style={styles.toolButton}
               onPress={() => setShowTemplateModal(true)}
@@ -956,7 +919,7 @@ export function EditorScreen() {
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.toolButton}
-              onPress={showImageOptions}
+              onPress={pickFromLibrary}
               disabled={isSaving}
             >
               <Feather name="image" size={22} color={isSaving ? colors.textMuted : colors.textSecondary} />
@@ -1009,41 +972,85 @@ export function EditorScreen() {
       />
 
       <Modal visible={showTagModal} transparent animationType="fade" onRequestClose={() => setShowTagModal(false)}>
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
+        >
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>添加标签</Text>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>??????</Text>
               <TouchableOpacity onPress={() => setShowTagModal(false)}>
                 <Feather name="x" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
-            <View style={styles.tagInputRow}>
-              <TextInput
-                style={[styles.tagInput, { backgroundColor: colors.inputBackground, color: colors.textPrimary }]}
-                placeholder="输入标签名称"
-                placeholderTextColor={colors.textMuted}
-                value={newTag}
-                onChangeText={setNewTag}
-                onSubmitEditing={addTag}
-              />
-              <TouchableOpacity style={[styles.tagAddButton, { backgroundColor: colors.primary }]} onPress={addTag}>
-                <Text style={styles.tagAddButtonText}>添加</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.currentTags}>
-              {tags.map((tag) => (
-                <TouchableOpacity 
-                  key={tag}
-                  style={[styles.tag, { backgroundColor: colors.primary + '20' }]}
-                  onPress={() => removeTag(tag)}
-                >
-                  <Text style={[styles.tagText, { color: colors.primary }]}>#{tag}</Text>
-                  <Feather name="x" size={12} color={colors.primary} />
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.modalBody}
+            >
+              <View style={styles.tagInputRow}>
+                <TextInput
+                  style={[styles.tagInput, { backgroundColor: colors.inputBackground, color: colors.textPrimary }]}
+                  placeholder="?????????"
+                  placeholderTextColor={colors.textMuted}
+                  value={newTag}
+                  onChangeText={setNewTag}
+                  onSubmitEditing={addTag}
+                />
+                <TouchableOpacity style={[styles.tagAddButton, { backgroundColor: colors.primary }]} onPress={addTag}>
+                  <Text style={styles.tagAddButtonText}>???</Text>
                 </TouchableOpacity>
-              ))}
-            </View>
+              </View>
+              {presetTags.length > 0 && (
+                <View style={styles.tagSection}>
+                  <Text style={[styles.tagSectionTitle, { color: colors.textSecondary }]}>??????</Text>
+                  <View style={styles.tagSuggestionList}>
+                    {presetTags.map((tag) => (
+                      <TouchableOpacity
+                        key={`preset-${tag}`}
+                        style={[styles.tag, { backgroundColor: colors.primary + '12' }]}
+                        onPress={() => addTagValue(tag)}
+                      >
+                        <Text style={[styles.tagText, { color: colors.primary }]}>#{tag}</Text>
+                        <Feather name="plus" size={12} color={colors.primary} />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+              {suggestedTags.length > 0 && (
+                <View style={styles.tagSection}>
+                  <Text style={[styles.tagSectionTitle, { color: colors.textSecondary }]}>??????</Text>
+                  <View style={styles.tagSuggestionList}>
+                    {suggestedTags.map((tag) => (
+                      <TouchableOpacity
+                        key={`suggest-${tag}`}
+                        style={[styles.tag, { backgroundColor: colors.primary + '12' }]}
+                        onPress={() => addTagValue(tag)}
+                      >
+                        <Text style={[styles.tagText, { color: colors.primary }]}>#{tag}</Text>
+                        <Feather name="plus" size={12} color={colors.primary} />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+              <View style={styles.currentTags}>
+                {tags.map((tag) => (
+                  <TouchableOpacity 
+                    key={tag}
+                    style={[styles.tag, { backgroundColor: colors.primary + '20' }]}
+                    onPress={() => removeTag(tag)}
+                  >
+                    <Text style={[styles.tagText, { color: colors.primary }]}>#{tag}</Text>
+                    <Feather name="x" size={12} color={colors.primary} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={showPromptModal} transparent animationType="fade" onRequestClose={() => setShowPromptModal(false)}>
@@ -1103,6 +1110,16 @@ export function EditorScreen() {
           />
         </SafeAreaView>
       </Modal>
+
+      {Platform.OS === 'android' && (
+        <ThemedAlert
+          visible={!!alertConfig}
+          title={alertConfig?.title}
+          message={alertConfig?.message}
+          actions={alertConfig?.actions}
+          onClose={hideAlert}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -1145,6 +1162,9 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: Layout.spacing.lg,
   },
   editorContainer: {
     padding: Layout.spacing.md,
@@ -1287,6 +1307,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  modalBody: {
+    paddingBottom: Layout.spacing.md,
+  },
   tagInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1308,6 +1331,19 @@ const styles = StyleSheet.create({
   tagAddButtonText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  tagSection: {
+    marginBottom: Layout.spacing.md,
+  },
+  tagSectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: Layout.spacing.sm,
+  },
+  tagSuggestionList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   currentTags: {
     flexDirection: 'row',

@@ -53,6 +53,7 @@ const STORAGE_KEYS = {
   THEME_ID: 'theme_id',
   IMAGE_COMPRESSION: 'image_compression',
   ONBOARDING_DONE: 'onboarding_done',
+  TAG_PRESETS: 'tag_presets',
 } as const;
 
 // ============ 日记条目相关 ============
@@ -182,6 +183,44 @@ export const getOnboardingDone = (): boolean => {
 
 export const setOnboardingDone = (done: boolean): void => {
   getStorage().set(STORAGE_KEYS.ONBOARDING_DONE, done);
+};
+
+// ============ 鏍囩棰勮 ============ 
+
+const DEFAULT_TAG_PRESETS = [
+  '鏃ュ父',
+  '蹇冩儏',
+  '宸ヤ綔',
+  '瀛︿範',
+  '鏃呰',
+  '瀹跺涵',
+  '鍋ュ悍',
+  '缇庨',
+  '杩愬姩',
+  '鐏垫劅',
+  '鎰熸仼',
+  '闃呰',
+];
+
+export const getTagPresets = (): string[] => {
+  const data = getStorage().getString(STORAGE_KEYS.TAG_PRESETS);
+  if (!data) {
+    getStorage().set(STORAGE_KEYS.TAG_PRESETS, JSON.stringify(DEFAULT_TAG_PRESETS));
+    return [...DEFAULT_TAG_PRESETS];
+  }
+  try {
+    const parsed = JSON.parse(data);
+    const cleaned = Array.isArray(parsed) ? parsed.filter((t) => typeof t === 'string') : [];
+    if (cleaned.length === 0) return [];
+    return cleaned;
+  } catch {
+    getStorage().set(STORAGE_KEYS.TAG_PRESETS, JSON.stringify(DEFAULT_TAG_PRESETS));
+    return [...DEFAULT_TAG_PRESETS];
+  }
+};
+
+export const setTagPresets = (tags: string[]): void => {
+  getStorage().set(STORAGE_KEYS.TAG_PRESETS, JSON.stringify(tags));
 };
 
 // ============ 导入导出相关 ============

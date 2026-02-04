@@ -6,11 +6,11 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Alert,
   StatusBar,
   Modal,
   Dimensions,
   Animated,
+  Platform,
 } from 'react-native';
 import { PinchGestureHandler, PinchGestureHandlerGestureEvent, State, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,7 +26,8 @@ import { Colors, Layout, WEATHER_OPTIONS } from '../constants';
 import { RootStackParamList } from '../types';
 import { formatDateDisplay, formatWeekday } from '../utils/dateUtils';
 import { getImageUri } from '../utils/imageStorage';
-import { MarkdownPreview } from '../components';
+import { MarkdownPreview, ThemedAlert } from '../components';
+import { useThemedAlert } from '../hooks';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -38,6 +39,7 @@ const getEntryImages = (entry: { images?: string[]; imageBase64?: string | null 
 const ZoomableImage = ({ uri }: { uri: string }) => {
   const scale = useRef(new Animated.Value(1)).current;
   const baseScale = useRef(1);
+  const lastState = useRef<number>(State.UNDETERMINED);
 
   const onPinchEvent = Animated.event<PinchGestureHandlerGestureEvent>(
     [{ nativeEvent: { scale } }],
@@ -45,11 +47,12 @@ const ZoomableImage = ({ uri }: { uri: string }) => {
   );
 
   const onPinchStateChange = (event: PinchGestureHandlerGestureEvent) => {
-    if (event.nativeEvent.oldState === State.ACTIVE) {
+    if (lastState.current === State.ACTIVE && event.nativeEvent.state !== State.ACTIVE) {
       const newScale = baseScale.current * event.nativeEvent.scale;
       baseScale.current = Math.min(Math.max(newScale, 1), 4);
       scale.setValue(baseScale.current);
     }
+    lastState.current = event.nativeEvent.state;
   };
 
   return (
@@ -74,6 +77,7 @@ export function DiaryDetailScreen() {
   const route = useRoute<DetailRouteProp>();
   const { getEntryById, deleteEntry } = useDiary();
   const { colors, isDark } = useTheme();
+  const { showAlert, alertConfig, hideAlert } = useThemedAlert();
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showMarkdown, setShowMarkdown] = useState(true);
@@ -85,7 +89,7 @@ export function DiaryDetailScreen() {
     try {
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('权限提示', '需要存储权限才能保存图片');
+        showAlert('权限提示', '需要存储权限才能保存图片');
         return;
       }
 
@@ -93,7 +97,7 @@ export function DiaryDetailScreen() {
         const uri = await viewShotRef.current.capture();
         const asset = await MediaLibrary.createAssetAsync(uri);
         
-        Alert.alert('导出成功', '日记已保存为图片', [
+        showAlert('导出成功', '日记已保存为图片', [
           { text: '好的' },
           { 
             text: '分享', 
@@ -108,7 +112,7 @@ export function DiaryDetailScreen() {
       }
     } catch (error) {
       console.error('Export as image error:', error);
-      Alert.alert('导出失败', '导出图片时发生错误');
+      showAlert('导出失败', '导出图片时发生错误');
     }
   };
   const weatherOption = WEATHER_OPTIONS.find((w) => w.id === entry?.weather);
@@ -126,7 +130,7 @@ export function DiaryDetailScreen() {
   }, [navigation, entry]);
 
   const handleDelete = useCallback(() => {
-    Alert.alert(
+    showAlert(
       '删除日记',
       '确定要删除这篇日记吗？此操作无法撤销。',
       [
@@ -180,7 +184,7 @@ export function DiaryDetailScreen() {
       </View>
 
       <View style={styles.viewShotHidden} collapsable={false}>
-        <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }} collapsable={false}>
+        <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
           <View style={[styles.exportContainer, { backgroundColor: colors.cardBackground, padding: Layout.spacing.md }]}>
             <View style={styles.metaSection}>
               <View style={styles.dateRow}>
@@ -363,6 +367,16 @@ export function DiaryDetailScreen() {
           )}
         </GestureHandlerRootView>
       </Modal>
+
+      {Platform.OS === 'android' && (
+        <ThemedAlert
+          visible={!!alertConfig}
+          title={alertConfig?.title}
+          message={alertConfig?.message}
+          actions={alertConfig?.actions}
+          onClose={hideAlert}
+        />
+      )}
     </SafeAreaView>
   );
 }

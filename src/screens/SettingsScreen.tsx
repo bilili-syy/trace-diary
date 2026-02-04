@@ -4,7 +4,6 @@ import {
   StyleSheet, 
   Text, 
   ScrollView,
-  Alert,
   Modal,
   TouchableOpacity,
   StatusBar,
@@ -23,14 +22,15 @@ import * as DocumentPicker from 'expo-document-picker';
 import { cacheDirectory, writeAsStringAsync, readAsStringAsync, EncodingType } from 'expo-file-system/legacy';
 import * as Notifications from 'expo-notifications';
 import JSZip from 'jszip';
-import { SettingsItem, PinInput, MoodChart } from '../components';
+import { SettingsItem, PinInput, MoodChart, ThemedAlert } from '../components';
 import { useDiary, useAuth } from '../context';
 import { useTheme } from '../context/ThemeProvider';
 import { Layout } from '../constants';
 import { ExportData, MainTabParamList } from '../types';
 import { isValidPinFormat } from '../utils/cryptoUtils';
 import { readImageAsBase64, writeImageFromBase64 } from '../utils/imageStorage';
-import { getStorage, getImageCompression, setImageCompression } from '../api/storage';
+import { getStorage, getImageCompression, setImageCompression, getTagPresets, setTagPresets } from '../api/storage';
+import { useThemedAlert } from '../hooks';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -72,6 +72,7 @@ export function SettingsScreen() {
   const { exportEntries, importEntries, state: diaryState } = useDiary();
   const { state: authState, enableAppLock, disableAppLock, authenticateWithPin } = useAuth();
   const { colors, theme, setTheme, availableThemes, colorMode, setColorMode, isDark } = useTheme();
+  const { showAlert, alertConfig, hideAlert } = useThemedAlert();
 
   const [pinModalVisible, setPinModalVisible] = useState(false);
   const [pinModalMode, setPinModalMode] = useState<PinModalMode>(null);
@@ -83,6 +84,9 @@ export function SettingsScreen() {
   const [isImporting, setIsImporting] = useState(false);
   const [aboutModalVisible, setAboutModalVisible] = useState(false);
   const [imageCompressionEnabled, setImageCompressionEnabled] = useState(() => getImageCompression());
+  const [tagModalVisible, setTagModalVisible] = useState(false);
+  const [tagPresets, setTagPresetsState] = useState<string[]>(() => getTagPresets());
+  const [newTagPreset, setNewTagPreset] = useState('');
 
   const [reminderSettings, setReminderSettings] = useState<ReminderSettings>(() => {
     const saved = getStorage().getString(STORAGE_KEYS.REMINDER_SETTINGS);
@@ -178,7 +182,7 @@ export function SettingsScreen() {
       }
     }
 
-    navigation.setParams({ open: undefined });
+    navigation.setParams({ open: undefined } as any);
   }, [route.params?.open, reminderSettings.hour, reminderSettings.minute, authState.isAppLockEnabled, navigation]);
 
   const scheduleReminder = async (settings: ReminderSettings) => {
@@ -190,7 +194,7 @@ export function SettingsScreen() {
     if (status !== 'granted') {
       const { status: newStatus } = await Notifications.requestPermissionsAsync();
       if (newStatus !== 'granted') {
-        Alert.alert('权限提示', '需要通知权限才能设置日记提醒');
+        showAlert('权限提示', '需要通知权限才能设置日记提醒');
         return false;
       }
     }
@@ -225,7 +229,7 @@ export function SettingsScreen() {
     const minute = parseInt(tempMinute, 10);
     
     if (isNaN(hour) || hour < 0 || hour > 23 || isNaN(minute) || minute < 0 || minute > 59) {
-      Alert.alert('错误', '请输入有效的时间');
+      showAlert('错误', '请输入有效的时间');
       return;
     }
 
@@ -262,7 +266,7 @@ export function SettingsScreen() {
       const fileName = `trace-backup-${new Date().toISOString().split('T')[0]}.zip`;
       
       if (!cacheDirectory) {
-        Alert.alert('错误', '无法访问缓存目录');
+        showAlert('错误', '无法访问缓存目录');
         setIsExporting(false);
         return;
       }
@@ -277,11 +281,11 @@ export function SettingsScreen() {
           dialogTitle: '导出日记数据',
         });
       } else {
-        Alert.alert('错误', '分享功能不可用');
+        showAlert('错误', '分享功能不可用');
       }
     } catch (error) {
       console.error('Export error:', error);
-      Alert.alert('导出失败', '导出数据时发生错误');
+      showAlert('导出失败', '导出数据时发生错误');
     } finally {
       setIsExporting(false);
     }
@@ -303,7 +307,7 @@ export function SettingsScreen() {
       
       const dataFile = zip.file('data.json');
       if (!dataFile) {
-        Alert.alert('错误', '无效的备份文件格式');
+        showAlert('错误', '无效的备份文件格式');
         setIsImporting(false);
         return;
       }
@@ -312,7 +316,7 @@ export function SettingsScreen() {
       const data: ExportData = JSON.parse(jsonContent);
 
       if (!data.entries || !Array.isArray(data.entries)) {
-        Alert.alert('错误', '无效的备份文件格式');
+        showAlert('错误', '无效的备份文件格式');
         setIsImporting(false);
         return;
       }
@@ -338,7 +342,7 @@ export function SettingsScreen() {
         ? `发现 ${data.entries.length} 条日记和 ${imageCount} 张图片。请选择导入方式：`
         : `发现 ${data.entries.length} 条日记记录。请选择导入方式：`;
 
-      Alert.alert(
+      showAlert(
         '导入数据',
         message,
         [
@@ -349,14 +353,14 @@ export function SettingsScreen() {
               await importImages();
               importEntries(data, 'merge');
               setIsImporting(false);
-              Alert.alert('成功', '数据已合并导入');
+              showAlert('成功', '数据已合并导入');
             },
           },
           {
             text: '覆盖',
             style: 'destructive',
             onPress: () => {
-              Alert.alert(
+              showAlert(
                 '警告',
                 '覆盖将删除所有现有数据，确定继续吗？',
                 [
@@ -368,7 +372,7 @@ export function SettingsScreen() {
                       await importImages();
                       importEntries(data, 'overwrite');
                       setIsImporting(false);
-                      Alert.alert('成功', '数据已覆盖导入');
+                      showAlert('成功', '数据已覆盖导入');
                     },
                   },
                 ]
@@ -379,7 +383,7 @@ export function SettingsScreen() {
       );
     } catch (error) {
       console.error('Import error:', error);
-      Alert.alert('导入失败', '请确保选择了有效的备份文件');
+      showAlert('导入失败', '请确保选择了有效的备份文件');
       setIsImporting(false);
     }
   };
@@ -392,6 +396,28 @@ export function SettingsScreen() {
       setPinModalMode('disable');
       setPinModalVisible(true);
     }
+  };
+
+  const saveTagPresetList = (next: string[]) => {
+    setTagPresetsState(next);
+    setTagPresets(next);
+  };
+
+  const addTagPreset = () => {
+    const trimmed = newTagPreset.trim();
+    if (!trimmed) return;
+    if (tagPresets.includes(trimmed)) {
+      setNewTagPreset('');
+      return;
+    }
+    const next = [...tagPresets, trimmed].slice(0, 30);
+    saveTagPresetList(next);
+    setNewTagPreset('');
+  };
+
+  const removeTagPreset = (tag: string) => {
+    const next = tagPresets.filter((t) => t !== tag);
+    saveTagPresetList(next);
   };
 
   const handlePinComplete = useCallback((pin: string) => {
@@ -415,7 +441,7 @@ export function SettingsScreen() {
         setPinModalVisible(false);
         setPinModalMode(null);
         setTempPin('');
-        Alert.alert('成功', '应用锁已启用');
+        showAlert('成功', '应用锁已启用');
         break;
 
       case 'disable':
@@ -424,7 +450,7 @@ export function SettingsScreen() {
           disableAppLock();
           setPinModalVisible(false);
           setPinModalMode(null);
-          Alert.alert('成功', '应用锁已禁用');
+          showAlert('成功', '应用锁已禁用');
         } else {
           setPinError('PIN 码错误');
         }
@@ -564,6 +590,16 @@ export function SettingsScreen() {
           )}
         </View>
 
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>???</Text>
+        <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+          <SettingsItem
+            icon="tag"
+            title="??????"
+            subtitle={tagPresets.length > 0 ? `?????${tagPresets.length} ?????` : '???????????'}
+            onPress={() => setTagModalVisible(true)}
+          />
+        </View>
+
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>安全</Text>
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <SettingsItem
@@ -680,7 +716,57 @@ export function SettingsScreen() {
         </View>
       </Modal>
 
-      <Modal visible={reminderModalVisible} animationType="slide" transparent onRequestClose={() => setReminderModalVisible(false)}>
+      <Modal visible={tagModalVisible} animationType="slide" transparent onRequestClose={() => setTagModalVisible(false)}>
+        <KeyboardAvoidingView 
+          style={styles.themeModalOverlay} 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <TouchableOpacity 
+            style={styles.modalBackdrop} 
+            activeOpacity={1} 
+            onPress={() => setTagModalVisible(false)} 
+          />
+          <View style={[styles.themeModalContent, { backgroundColor: colors.cardBackground }]}>
+            <View style={styles.themeModalHeader}>
+              <Text style={[styles.themeModalTitle, { color: colors.textPrimary }]}>??????</Text>
+              <TouchableOpacity onPress={() => setTagModalVisible(false)}>
+                <Feather name="x" size={24} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.tagPresetInputRow}>
+              <TextInput
+                style={[styles.tagPresetInput, { backgroundColor: colors.inputBackground, color: colors.textPrimary }]}
+                placeholder="?????????"
+                placeholderTextColor={colors.textMuted}
+                value={newTagPreset}
+                onChangeText={setNewTagPreset}
+                onSubmitEditing={addTagPreset}
+              />
+              <TouchableOpacity style={[styles.tagPresetAddButton, { backgroundColor: colors.primary }]} onPress={addTagPreset}>
+                <Text style={styles.tagPresetAddButtonText}>???</Text>
+              </TouchableOpacity>
+            </View>
+            {tagPresets.length === 0 ? (
+              <Text style={[styles.tagPresetEmpty, { color: colors.textMuted }]}>???????????????????????????</Text>
+            ) : (
+              <View style={styles.tagPresetList}>
+                {tagPresets.map((tag) => (
+                  <TouchableOpacity
+                    key={`preset-${tag}`}
+                    style={[styles.tagPresetItem, { backgroundColor: colors.primary + '15' }]}
+                    onPress={() => removeTagPreset(tag)}
+                  >
+                    <Text style={[styles.tagPresetText, { color: colors.primary }]}>#{tag}</Text>
+                    <Feather name="x" size={12} color={colors.primary} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+<Modal visible={reminderModalVisible} animationType="slide" transparent onRequestClose={() => setReminderModalVisible(false)}>
         <KeyboardAvoidingView 
           style={styles.themeModalOverlay} 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -785,6 +871,16 @@ export function SettingsScreen() {
           </View>
         </View>
       </Modal>
+
+      {Platform.OS === 'android' && (
+        <ThemedAlert
+          visible={!!alertConfig}
+          title={alertConfig?.title}
+          message={alertConfig?.message}
+          actions={alertConfig?.actions}
+          onClose={hideAlert}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -846,6 +942,50 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.lg,
   },
   themeModalTitle: { fontSize: 18, fontWeight: '600' },
+  tagPresetInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Layout.spacing.sm,
+    marginBottom: Layout.spacing.md,
+  },
+  tagPresetInput: {
+    flex: 1,
+    height: 44,
+    borderRadius: Layout.borderRadius.md,
+    paddingHorizontal: Layout.spacing.md,
+    fontSize: 16,
+  },
+  tagPresetAddButton: {
+    paddingHorizontal: Layout.spacing.md,
+    paddingVertical: Layout.spacing.sm,
+    borderRadius: Layout.borderRadius.md,
+  },
+  tagPresetAddButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFF',
+  },
+  tagPresetList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Layout.spacing.sm,
+  },
+  tagPresetItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Layout.spacing.md,
+    paddingVertical: Layout.spacing.sm,
+    borderRadius: Layout.borderRadius.round,
+    gap: 6,
+  },
+  tagPresetText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  tagPresetEmpty: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
   themeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   themeItem: {
     width: '30%',

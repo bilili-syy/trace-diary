@@ -8,21 +8,22 @@ import {
   StatusBar,
   TextInput,
   ScrollView,
-  Alert,
   Modal,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
-import { DiaryCard } from '../components';
+import { DiaryCard, ThemedAlert } from '../components';
 import { useDiary } from '../context';
 import { useTheme } from '../context/ThemeProvider';
 import { Layout, MOOD_OPTIONS, WEATHER_OPTIONS } from '../constants';
 import { RootStackParamList, MainTabParamList, DiaryEntry } from '../types';
 import { formatDateDisplay } from '../utils/dateUtils';
 import { getOnboardingDone, setOnboardingDone } from '../api/storage';
+import { useThemedAlert } from '../hooks';
 
 interface FilterState {
   mood: string | null;
@@ -39,6 +40,7 @@ export function HomeScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { state, getThisDayLastYearEntries, deleteEntry } = useDiary();
   const { colors, isDark } = useTheme();
+  const { showAlert, alertConfig, hideAlert } = useThemedAlert();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>({ mood: null, weather: null, tag: null });
@@ -129,7 +131,7 @@ export function HomeScreen() {
   }, [navigation]);
 
   const handleCardLongPress = useCallback((entry: DiaryEntry) => {
-    Alert.alert(
+    showAlert(
       entry.content.substring(0, 20) + (entry.content.length > 20 ? '...' : ''),
       '选择操作',
       [
@@ -139,7 +141,7 @@ export function HomeScreen() {
           text: '删除', 
           style: 'destructive',
           onPress: () => {
-            Alert.alert('确认删除', '确定要删除这篇日记吗？', [
+            showAlert('确认删除', '确定要删除这篇日记吗？', [
               { text: '取消', style: 'cancel' },
               { text: '删除', style: 'destructive', onPress: () => deleteEntry(entry.id) },
             ]);
@@ -385,6 +387,16 @@ export function HomeScreen() {
           </View>
         </View>
       </Modal>
+
+      {Platform.OS === 'android' && (
+        <ThemedAlert
+          visible={!!alertConfig}
+          title={alertConfig?.title}
+          message={alertConfig?.message}
+          actions={alertConfig?.actions}
+          onClose={hideAlert}
+        />
+      )}
     </SafeAreaView>
   );
 }
