@@ -106,23 +106,11 @@ if errorlevel 1 (
 echo [DONE] Code pushed
 echo.
 
-:: Check if tag exists (local/remote) and replace automatically
-echo [CHECK] Checking if tag exists...
-git rev-parse %VERSION% >nul 2>&1
-if !errorlevel!==0 (
-    echo [PASS] Local tag not found
-) else (
-    echo [WARN] Local tag %VERSION% exists, replacing...
-    git tag -d %VERSION% >nul 2>&1
-)
-
-git ls-remote --tags origin %VERSION% | findstr %VERSION% >nul
-if !errorlevel!==0 (
-    echo [PASS] Remote tag not found
-) else (
-    echo [WARN] Remote tag %VERSION% exists, replacing...
-    git push origin :refs/tags/%VERSION% 2>nul
-)
+:: Ensure tag is clean (local/remote) before creating
+echo [CHECK] Ensuring tag %VERSION% is clean...
+git tag -d %VERSION% >nul 2>&1
+git push origin :refs/tags/%VERSION% >nul 2>&1
+echo [DONE] Tag cleared (if existed)
 echo.
 
 :: Create new tag
