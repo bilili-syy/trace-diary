@@ -15,8 +15,8 @@
                  "ios":  {
                              "bundleIdentifier":  "com.trace.diary",
                              "supportsTablet":  true,
-                             "buildNumber":  "10000",
                              "infoPlist":  {
+                                               "ITSAppUsesNonExemptEncryption":  false,
                                                "NSFaceIDUsageDescription":  "使用 Face ID 解锁素履",
                                                "NSPhotoLibraryUsageDescription":  "允许素履访问相册以添加图片到日记"
                                            }

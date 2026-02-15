@@ -74,7 +74,7 @@ jobs:
       - name: Build iOS (EAS)
         id: build_ios
         run: |
-          eas build --platform ios --profile preview --non-interactive --wait --json > build_ios.json
+          eas build --platform ios --profile preview-ios --non-interactive --wait --json > build_ios.json
           BUILD_ID=$(node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync("build_ios.json","utf8"));const b=Array.isArray(d)?d[0]:d;console.log(b.id);')
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
 

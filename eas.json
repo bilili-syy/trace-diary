@@ -15,6 +15,9 @@
         "gradleCommand": ":app:assembleRelease"
       }
     },
+    "preview-ios": {
+      "distribution": "store"
+    },
     "production": {
       "autoIncrement": true,
       "android": {
