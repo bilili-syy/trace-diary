@@ -71,14 +71,23 @@ jobs:
       - name: Download Android APK
         run: curl -L "${{ steps.android_artifact.outputs.url }}" -o trace-android.apk
 
+      - name: Upload Android Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trace-android
+          path: trace-android.apk
+          retention-days: 30
+
       - name: Build iOS (EAS)
         id: build_ios
+        continue-on-error: true
         run: |
           eas build --platform ios --profile preview-ios --non-interactive --wait --json > build_ios.json
           BUILD_ID=$(node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync("build_ios.json","utf8"));const b=Array.isArray(d)?d[0]:d;console.log(b.id);')
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
 
       - name: Resolve iOS artifact
+        if: steps.build_ios.outcome == 'success'
         id: ios_artifact
         run: |
           echo "=== build_ios.json content ==="
@@ -110,23 +119,29 @@ jobs:
           echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Download iOS IPA
+        if: steps.build_ios.outcome == 'success'
         run: curl -L "${{ steps.ios_artifact.outputs.url }}" -o trace-ios.ipa
 
-      - name: Upload Artifacts
+      - name: Upload iOS Artifact
+        if: steps.build_ios.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
-          name: trace-release
-          path: |
-            trace-android.apk
-            trace-ios.ipa
+          name: trace-ios
+          path: trace-ios.ipa
           retention-days: 30
 
-      - name: Upload to Release
+      - name: Upload Android To Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            trace-android.apk
-            trace-ios.ipa
+          files: trace-android.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload iOS To Release
+        if: startsWith(github.ref, 'refs/tags/') && steps.build_ios.outcome == 'success'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: trace-ios.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
