@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { useTheme } from '../context/ThemeProvider';
-import { Layout } from '../constants';
+import { Layout, Typography } from '../constants';
 import { getImageUri } from '../utils/imageStorage';
 
 interface MarkdownPreviewProps {
@@ -163,30 +163,57 @@ export function MarkdownPreview({ content, images }: MarkdownPreviewProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  spacer: { height: 8 },
-  h1: { fontSize: 24, fontWeight: 'bold', marginVertical: 12, lineHeight: 32 },
-  h2: { fontSize: 20, fontWeight: '600', marginVertical: 10, lineHeight: 28 },
-  h3: { fontSize: 18, fontWeight: '600', marginVertical: 8, lineHeight: 26 },
-  paragraph: { fontSize: 16, lineHeight: 26, marginVertical: 4 },
-  bold: { fontWeight: 'bold' },
+  spacer: { height: Layout.spacing.xs },
+  h1: {
+    fontSize: Typography.fontSize['2xl'],
+    fontWeight: Typography.fontWeight.bold,
+    marginVertical: Layout.spacing.sm,
+    lineHeight: Math.round(Typography.fontSize['2xl'] * Typography.lineHeight.tight),
+  },
+  h2: {
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.semibold,
+    marginVertical: Layout.spacing.xs + 2,
+    lineHeight: Math.round(Typography.fontSize.xl * Typography.lineHeight.tight),
+  },
+  h3: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.semibold,
+    marginVertical: Layout.spacing.xs,
+    lineHeight: Math.round(Typography.fontSize.lg * Typography.lineHeight.normal),
+  },
+  paragraph: {
+    fontSize: Typography.fontSize.base,
+    lineHeight: Math.round(Typography.fontSize.base * Typography.lineHeight.relaxed),
+    marginVertical: Layout.spacing.xs / 2,
+  },
+  bold: { fontWeight: Typography.fontWeight.bold },
   italic: { fontStyle: 'italic' },
   strikethrough: { textDecorationLine: 'line-through' },
-  code: { fontFamily: 'monospace', paddingHorizontal: 4, borderRadius: 4 },
-  listItem: { flexDirection: 'row', marginVertical: 4, paddingLeft: 8 },
-  listBullet: { width: 20, fontSize: 16, fontWeight: '600' },
-  listNumber: { width: 24, fontSize: 16, fontWeight: '500' },
-  listText: { flex: 1, fontSize: 16, lineHeight: 24 },
+  code: { fontFamily: 'monospace', paddingHorizontal: Layout.spacing.xs / 2, borderRadius: 4 },
+  listItem: { flexDirection: 'row', marginVertical: Layout.spacing.xs / 2, paddingLeft: Layout.spacing.xs },
+  listBullet: { width: 20, fontSize: Typography.fontSize.base, fontWeight: Typography.fontWeight.semibold },
+  listNumber: { width: 24, fontSize: Typography.fontSize.base, fontWeight: Typography.fontWeight.medium },
+  listText: {
+    flex: 1,
+    fontSize: Typography.fontSize.base,
+    lineHeight: Math.round(Typography.fontSize.base * Typography.lineHeight.normal),
+  },
   blockquote: { 
     borderLeftWidth: 4, 
-    paddingLeft: 12, 
-    paddingVertical: 8, 
-    marginVertical: 8,
+    paddingLeft: Layout.spacing.sm,
+    paddingVertical: Layout.spacing.xs,
+    marginVertical: Layout.spacing.xs,
     borderRadius: 4,
   },
-  blockquoteText: { fontSize: 16, lineHeight: 24, fontStyle: 'italic' },
-  hr: { height: 1, marginVertical: 16 },
-  imagesContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 },
-  image: { width: 100, height: 100, borderRadius: 8 },
+  blockquoteText: {
+    fontSize: Typography.fontSize.base,
+    lineHeight: Math.round(Typography.fontSize.base * Typography.lineHeight.normal),
+    fontStyle: 'italic',
+  },
+  hr: { height: 1, marginVertical: Layout.spacing.md },
+  imagesContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: Layout.spacing.xs, marginTop: Layout.spacing.md },
+  image: { width: 100, height: 100, borderRadius: Layout.borderRadius.sm },
 });
 
 export default MarkdownPreview;

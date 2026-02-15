@@ -1,6 +1,6 @@
 import { StyleSheet, Platform } from 'react-native';
 import Colors from './Colors';
-import Layout from './Layout';
+import Layout, { Typography } from './Layout';
 
 // 全局样式常量
 export const GlobalStyles = StyleSheet.create({
@@ -46,34 +46,34 @@ export const GlobalStyles = StyleSheet.create({
 
   // 标题文本
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: Typography.fontSize['2xl'],
+    fontWeight: Typography.fontWeight.bold,
     color: Colors.textPrimary,
   },
 
   // 副标题
   subtitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.semibold,
     color: Colors.textPrimary,
   },
 
   // 正文文本
   body: {
-    fontSize: 16,
+    fontSize: Typography.fontSize.base,
     color: Colors.textPrimary,
-    lineHeight: 24,
+    lineHeight: Math.round(Typography.fontSize.base * Typography.lineHeight.normal),
   },
 
   // 辅助文本
   caption: {
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
     color: Colors.textSecondary,
   },
 
   // 小文本
   small: {
-    fontSize: 12,
+    fontSize: Typography.fontSize.xs,
     color: Colors.textMuted,
   },
 
@@ -83,7 +83,7 @@ export const GlobalStyles = StyleSheet.create({
     borderRadius: Layout.borderRadius.md,
     height: Layout.input.height,
     paddingHorizontal: Layout.input.paddingHorizontal,
-    fontSize: 16,
+    fontSize: Typography.fontSize.base,
     color: Colors.textPrimary,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -94,7 +94,7 @@ export const GlobalStyles = StyleSheet.create({
     backgroundColor: Colors.inputBackground,
     borderRadius: Layout.borderRadius.md,
     padding: Layout.spacing.md,
-    fontSize: 16,
+    fontSize: Typography.fontSize.base,
     color: Colors.textPrimary,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -113,8 +113,8 @@ export const GlobalStyles = StyleSheet.create({
 
   primaryButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
   },
 
   // 次要按钮
@@ -131,8 +131,8 @@ export const GlobalStyles = StyleSheet.create({
 
   secondaryButtonText: {
     color: Colors.primary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
   },
 
   // 行容器

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Colors, Layout, WEATHER_OPTIONS } from '../constants';
+import { Colors, Layout, Typography, WEATHER_OPTIONS } from '../constants';
 
 interface WeatherPickerProps {
   selectedWeather?: string;
@@ -54,8 +54,8 @@ const styles = StyleSheet.create({
     marginVertical: Layout.spacing.sm,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
     color: Colors.textSecondary,
     marginBottom: Layout.spacing.sm,
     paddingHorizontal: Layout.spacing.md,
@@ -78,9 +78,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   weatherLabel: {
-    fontSize: 12,
+    fontSize: Typography.fontSize.xs,
     color: Colors.textSecondary,
-    marginTop: 4,
+    marginTop: Layout.spacing.xs / 2,
   },
   weatherLabelSelected: {
     color: Colors.textPrimary,

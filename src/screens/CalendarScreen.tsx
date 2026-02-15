@@ -13,7 +13,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Calendar, DiaryCard } from '../components';
 import { useDiary } from '../context';
 import { useTheme } from '../context/ThemeProvider';
-import { Layout } from '../constants';
+import { Layout, Typography } from '../constants';
 import { RootStackParamList } from '../types';
 import { formatDateId, formatDateDisplay } from '../utils/dateUtils';
 
@@ -90,8 +90,8 @@ const styles = StyleSheet.create({
     paddingVertical: Layout.spacing.md,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: Typography.fontSize['2xl'],
+    fontWeight: Typography.fontWeight.bold,
   },
   content: {
     flex: 1,
@@ -103,8 +103,8 @@ const styles = StyleSheet.create({
     marginTop: Layout.spacing.md,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
     paddingHorizontal: Layout.spacing.md,
     marginBottom: Layout.spacing.sm,
   },
@@ -117,11 +117,11 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   noEntryText: {
-    fontSize: 16,
-    marginBottom: 4,
+    fontSize: Typography.fontSize.base,
+    marginBottom: Layout.spacing.xs / 2,
   },
   noEntryHint: {
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
   },
 });
 

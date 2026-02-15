@@ -22,7 +22,7 @@ import { MoodPicker, WeatherPicker, TemplateModal, MarkdownPreview, ThemedAlert 
 import { useDiary } from '../context';
 import { useTheme } from '../context/ThemeProvider';
 import { useDebounce, useThemedAlert } from '../hooks';
-import { Layout } from '../constants';
+import { Layout, Typography } from '../constants';
 import { RootStackParamList, DiaryEntry, DiaryTemplate } from '../types';
 import { formatDateId, formatDateDisplay, formatTime, countWords } from '../utils/dateUtils';
 import { saveImage, deleteImages, getImageUri } from '../utils/imageStorage';
@@ -710,11 +710,11 @@ export function EditorScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.cardBackground }]} edges={['top']}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.cardBackground} />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
       
       <View style={[styles.header, { borderBottomColor: colors.divider }]}>
-        <TouchableOpacity onPress={handleClose} style={styles.headerButton}>
+        <TouchableOpacity onPress={handleClose} style={[styles.headerButton, { backgroundColor: colors.inputBackground }]}>
           <Feather name="x" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
@@ -723,19 +723,19 @@ export function EditorScreen() {
           <Text style={[styles.headerTime, { color: colors.textMuted }]}>{formatTime(new Date())}</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity onPress={undo} style={styles.headerButton} disabled={!canUndo}>
+          <TouchableOpacity onPress={undo} style={[styles.headerButton, { backgroundColor: colors.inputBackground }]} disabled={!canUndo}>
             <Feather name="rotate-ccw" size={20} color={canUndo ? colors.textPrimary : colors.textMuted} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={redo} style={styles.headerButton} disabled={!canRedo}>
+          <TouchableOpacity onPress={redo} style={[styles.headerButton, { backgroundColor: colors.inputBackground }]} disabled={!canRedo}>
             <Feather name="rotate-cw" size={20} color={canRedo ? colors.textPrimary : colors.textMuted} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setWritingMode((prev) => !prev)} style={styles.headerButton}>
+          <TouchableOpacity onPress={() => setWritingMode((prev) => !prev)} style={[styles.headerButton, { backgroundColor: colors.inputBackground }]}>
             <Feather name={writingMode ? 'minimize-2' : 'maximize-2'} size={20} color={colors.textPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setShowPreview(!showPreview)} style={styles.headerButton}>
+          <TouchableOpacity onPress={() => setShowPreview(!showPreview)} style={[styles.headerButton, { backgroundColor: colors.inputBackground }]}>
             <Feather name={showPreview ? 'edit-2' : 'eye'} size={20} color={colors.textPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleSave} style={styles.headerButton}>
+          <TouchableOpacity onPress={handleSave} style={[styles.headerButton, { backgroundColor: colors.primary + '14' }]}>
             <Feather name="check" size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
@@ -907,13 +907,13 @@ export function EditorScreen() {
             ]}
           >
             <TouchableOpacity 
-              style={styles.toolButton}
+              style={[styles.toolButton, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}
               onPress={() => setShowTemplateModal(true)}
             >
               <Feather name="file-text" size={22} color={colors.textSecondary} />
             </TouchableOpacity>
             <TouchableOpacity 
-              style={styles.toolButton}
+              style={[styles.toolButton, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}
               onPress={pickFromLibrary}
               disabled={isSaving}
             >
@@ -925,21 +925,21 @@ export function EditorScreen() {
               )}
             </TouchableOpacity>
             <TouchableOpacity 
-              style={styles.toolButton}
+              style={[styles.toolButton, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}
               onPress={takePhoto}
               disabled={isSaving}
             >
               <Feather name="camera" size={22} color={isSaving ? colors.textMuted : colors.textSecondary} />
             </TouchableOpacity>
             <TouchableOpacity 
-              style={styles.toolButton}
+              style={[styles.toolButton, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}
               onPress={() => setShowSortModal(true)}
               disabled={images.length < 2}
             >
               <Feather name="move" size={22} color={images.length < 2 ? colors.textMuted : colors.textSecondary} />
             </TouchableOpacity>
             <TouchableOpacity 
-              style={styles.toolButton}
+              style={[styles.toolButton, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}
               onPress={() => setShowTagModal(true)}
             >
               <Feather name="tag" size={22} color={colors.textSecondary} />
@@ -950,7 +950,7 @@ export function EditorScreen() {
               )}
             </TouchableOpacity>
             <TouchableOpacity 
-              style={styles.toolButton}
+              style={[styles.toolButton, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}
               onPress={() => setShowPromptModal(true)}
             >
               <Feather name="help-circle" size={22} color={colors.textSecondary} />
@@ -1134,6 +1134,7 @@ const styles = StyleSheet.create({
   headerButton: {
     width: 44,
     height: 44,
+    borderRadius: Layout.borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1141,16 +1142,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerDate: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
   },
   wordCount: {
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: Typography.fontSize.xs,
+    marginTop: Layout.spacing.xs / 4,
   },
   headerTime: {
-    fontSize: 11,
-    marginTop: 2,
+    fontSize: Typography.fontSize.xs,
+    marginTop: Layout.spacing.xs / 4,
   },
   keyboardView: {
     flex: 1,
@@ -1166,8 +1167,8 @@ const styles = StyleSheet.create({
     minHeight: 300,
   },
   textInput: {
-    fontSize: 16,
-    lineHeight: 26,
+    fontSize: Typography.fontSize.base,
+    lineHeight: Math.round(Typography.fontSize.base * Typography.lineHeight.relaxed),
     minHeight: 200,
   },
   previewContainer: {
@@ -1210,18 +1211,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   addImageText: {
-    fontSize: 11,
-    marginTop: 4,
+    fontSize: Typography.fontSize.xs,
+    marginTop: Layout.spacing.xs / 2,
   },
   toolbar: {
     flexDirection: 'row',
     paddingHorizontal: Layout.spacing.md,
     paddingVertical: Layout.spacing.sm,
     borderTopWidth: 1,
+    gap: Layout.spacing.xs / 2,
   },
   toolButton: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
+    borderRadius: Layout.borderRadius.md,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -1239,8 +1243,8 @@ const styles = StyleSheet.create({
   },
   imageBadgeText: {
     color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.semibold,
   },
   headerRight: {
     flexDirection: 'row',
@@ -1261,8 +1265,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tagText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
   },
   imageOrderButtons: {
     position: 'absolute',
@@ -1299,8 +1303,8 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.lg,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.semibold,
   },
   modalBody: {
     paddingBottom: Layout.spacing.md,
@@ -1316,7 +1320,7 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: Layout.borderRadius.md,
     paddingHorizontal: Layout.spacing.md,
-    fontSize: 16,
+    fontSize: Typography.fontSize.base,
   },
   tagAddButton: {
     paddingHorizontal: Layout.spacing.md,
@@ -1324,15 +1328,15 @@ const styles = StyleSheet.create({
     borderRadius: Layout.borderRadius.md,
   },
   tagAddButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
   },
   tagSection: {
     marginBottom: Layout.spacing.md,
   },
   tagSectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
     marginBottom: Layout.spacing.sm,
   },
   tagSuggestionList: {
@@ -1351,13 +1355,13 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.lg,
   },
   promptText: {
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: Typography.fontSize.base,
+    lineHeight: Math.round(Typography.fontSize.base * Typography.lineHeight.normal),
     fontStyle: 'italic',
   },
   promptSectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
     marginBottom: Layout.spacing.sm,
   },
   promptList: {
@@ -1368,8 +1372,8 @@ const styles = StyleSheet.create({
     borderRadius: Layout.borderRadius.md,
   },
   promptItemText: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: Typography.fontSize.sm,
+    lineHeight: Math.round(Typography.fontSize.sm * Typography.lineHeight.normal),
   },
   sortModalContainer: {
     flex: 1,
@@ -1382,8 +1386,8 @@ const styles = StyleSheet.create({
     paddingVertical: Layout.spacing.md,
   },
   sortTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.semibold,
   },
   sortCloseButton: {
     width: 44,
@@ -1394,7 +1398,7 @@ const styles = StyleSheet.create({
   sortHint: {
     paddingHorizontal: Layout.spacing.md,
     paddingBottom: Layout.spacing.sm,
-    fontSize: 12,
+    fontSize: Typography.fontSize.xs,
   },
   sortGrid: {
     paddingHorizontal: Layout.spacing.md,
@@ -1436,8 +1440,8 @@ const styles = StyleSheet.create({
   },
   sortIndexText: {
     color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.semibold,
   },
   dialogContainer: {
     padding: Layout.spacing.lg,
@@ -1450,12 +1454,12 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.lg,
   },
   dialogTemplateName: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
   },
   dialogProgress: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
   },
   dialogQuestionCard: {
     padding: Layout.spacing.lg,
@@ -1463,16 +1467,16 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.lg,
   },
   dialogQuestion: {
-    fontSize: 20,
-    fontWeight: '600',
-    lineHeight: 28,
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.semibold,
+    lineHeight: Math.round(Typography.fontSize.xl * Typography.lineHeight.normal),
   },
   dialogInput: {
     minHeight: 150,
     padding: Layout.spacing.md,
     borderRadius: Layout.borderRadius.md,
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: Typography.fontSize.base,
+    lineHeight: Math.round(Typography.fontSize.base * Typography.lineHeight.normal),
     borderWidth: 1,
     marginBottom: Layout.spacing.lg,
   },
@@ -1495,15 +1499,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   dialogButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
   },
   dialogExitButton: {
     alignItems: 'center',
     paddingVertical: Layout.spacing.md,
   },
   dialogExitText: {
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
   },
 });
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Colors, Layout, MOOD_OPTIONS } from '../constants';
+import { Colors, Layout, Typography, MOOD_OPTIONS } from '../constants';
 
 interface MoodPickerProps {
   selectedMood?: string;
@@ -41,8 +41,8 @@ const styles = StyleSheet.create({
     marginVertical: Layout.spacing.sm,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
     color: Colors.textSecondary,
     marginBottom: Layout.spacing.sm,
     paddingHorizontal: Layout.spacing.md,
@@ -65,11 +65,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   moodEmoji: {
-    fontSize: 28,
-    marginBottom: 4,
+    fontSize: Typography.fontSize['3xl'],
+    marginBottom: Layout.spacing.xs / 2,
   },
   moodLabel: {
-    fontSize: 12,
+    fontSize: Typography.fontSize.xs,
     color: Colors.textSecondary,
   },
 });

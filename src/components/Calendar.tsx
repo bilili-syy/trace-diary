@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { 
+import {
   startOfMonth, 
   endOfMonth, 
   eachDayOfInterval, 
@@ -14,7 +14,7 @@ import {
 } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { DiaryEntry } from '../types';
-import { Colors, Layout } from '../constants';
+import { Colors, Layout, Typography } from '../constants';
 import { useTheme } from '../context/ThemeProvider';
 import { WEEKDAY_LABELS, formatDateId } from '../utils/dateUtils';
 
@@ -104,7 +104,7 @@ export function Calendar({ entries, onDateSelect, selectedDate }: CalendarProps)
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.cardBackground }]}>
+    <View style={[styles.container, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={goToPreviousMonth} style={styles.navButton}>
           <Feather name="chevron-left" size={24} color={colors.textPrimary} />
@@ -146,11 +146,14 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: Layout.borderRadius.lg,
     padding: Layout.spacing.md,
-    margin: Layout.spacing.md,
+    marginHorizontal: Layout.spacing.md,
+    marginTop: Layout.spacing.sm,
+    marginBottom: Layout.spacing.xs,
+    borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
     elevation: 3,
   },
   header: {
@@ -163,8 +166,8 @@ const styles = StyleSheet.create({
     padding: Layout.spacing.sm,
   },
   monthTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.semibold,
   },
   weekdayRow: {
     flexDirection: 'row',
@@ -176,8 +179,8 @@ const styles = StyleSheet.create({
     paddingVertical: Layout.spacing.xs,
   },
   weekdayText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.medium,
   },
   daysGrid: {
     flexDirection: 'row',
@@ -191,7 +194,7 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   dayText: {
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
   },
   moodIndicator: {
     width: 6,

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../context/ThemeProvider';
-import { Layout, MOOD_OPTIONS } from '../constants';
+import { Layout, Typography, MOOD_OPTIONS } from '../constants';
 import { DiaryEntry } from '../types';
 
 interface MoodChartProps {
@@ -71,7 +71,7 @@ export function MoodChart({ entries, days = 7 }: MoodChartProps) {
       </View>
 
       {moodStats.length > 0 && (
-        <View style={styles.statsContainer}>
+        <View style={[styles.statsContainer, { borderTopColor: colors.divider }]}>
           <Text style={[styles.statsTitle, { color: colors.textSecondary }]}>心情统计</Text>
           <View style={styles.statsRow}>
             {moodStats.map(([emoji, count]) => {
@@ -80,7 +80,7 @@ export function MoodChart({ entries, days = 7 }: MoodChartProps) {
               return (
                 <View key={emoji} style={styles.statItem}>
                   <Text style={styles.statEmoji}>{emoji}</Text>
-                  <View style={styles.statBar}>
+                  <View style={[styles.statBar, { backgroundColor: colors.inputBackground }]}>
                     <View 
                       style={[
                         styles.statBarFill, 
@@ -108,13 +108,13 @@ export function MoodChart({ entries, days = 7 }: MoodChartProps) {
 const styles = StyleSheet.create({
   container: {
     borderRadius: Layout.borderRadius.lg,
-    padding: Layout.spacing.md,
-    marginHorizontal: Layout.spacing.md,
-    marginVertical: Layout.spacing.sm,
+    paddingVertical: Layout.spacing.md,
+    paddingHorizontal: Layout.spacing.lg,
+    marginTop: Layout.spacing.sm,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.semibold,
     marginBottom: Layout.spacing.md,
   },
   chartContainer: {
@@ -143,17 +143,16 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   dayLabel: {
-    fontSize: 11,
-    marginTop: 4,
+    fontSize: Typography.fontSize.xs,
+    marginTop: Layout.spacing.xs / 2,
   },
   statsContainer: {
     marginTop: Layout.spacing.md,
     paddingTop: Layout.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
   },
   statsTitle: {
-    fontSize: 12,
+    fontSize: Typography.fontSize.sm,
     marginBottom: Layout.spacing.sm,
   },
   statsRow: {
@@ -165,13 +164,12 @@ const styles = StyleSheet.create({
     gap: Layout.spacing.sm,
   },
   statEmoji: {
-    fontSize: 16,
-    width: 24,
+    fontSize: Typography.fontSize.lg,
+    width: 28,
   },
   statBar: {
     flex: 1,
     height: 8,
-    backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -180,12 +178,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   statCount: {
-    fontSize: 11,
-    width: 36,
+    fontSize: Typography.fontSize.xs,
+    width: 40,
     textAlign: 'right',
   },
   emptyText: {
-    fontSize: 13,
+    fontSize: Typography.fontSize.sm,
     textAlign: 'center',
     paddingVertical: Layout.spacing.md,
   },

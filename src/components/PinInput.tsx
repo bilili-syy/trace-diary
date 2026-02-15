@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Vibration } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Colors, Layout } from '../constants';
+import { Colors, Layout, Typography } from '../constants';
 
 interface PinInputProps {
   onComplete: (pin: string) => void;
@@ -156,18 +156,18 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.xl,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: Typography.fontSize['2xl'],
+    fontWeight: Typography.fontWeight.semibold,
     color: Colors.textPrimary,
     marginBottom: Layout.spacing.sm,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
   error: {
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
     color: Colors.error,
     marginTop: Layout.spacing.sm,
   },
@@ -218,8 +218,8 @@ const styles = StyleSheet.create({
     height: 72,
   },
   keyText: {
-    fontSize: 28,
-    fontWeight: '500',
+    fontSize: Typography.fontSize['3xl'],
+    fontWeight: Typography.fontWeight.medium,
     color: Colors.textPrimary,
   },
 });

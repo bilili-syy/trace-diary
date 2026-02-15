@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Layout } from '../constants';
+import { Layout, Typography } from '../constants';
 import { useTheme } from '../context/ThemeProvider';
 
 interface SettingsItemProps {
@@ -73,29 +73,29 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Layout.spacing.md,
+    minHeight: 68,
+    paddingVertical: Layout.spacing.sm,
     paddingHorizontal: Layout.spacing.md,
     borderRadius: Layout.borderRadius.md,
-    marginBottom: Layout.spacing.sm,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Layout.spacing.md,
+    marginRight: Layout.spacing.sm,
   },
   textContainer: {
     flex: 1,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.medium,
   },
   subtitle: {
-    fontSize: 13,
-    marginTop: 2,
+    fontSize: Typography.fontSize.xs,
+    marginTop: Layout.spacing.xs / 4,
   },
 });
 

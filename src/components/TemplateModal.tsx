@@ -9,7 +9,7 @@ import {
   Pressable,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Colors, Layout, DIARY_TEMPLATES } from '../constants';
+import { Colors, Layout, Typography, DIARY_TEMPLATES } from '../constants';
 import { DiaryTemplate } from '../types';
 
 interface TemplateModalProps {
@@ -105,8 +105,8 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.divider,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.semibold,
     color: Colors.textPrimary,
   },
   closeButton: {
@@ -138,12 +138,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   templateName: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
     color: Colors.textPrimary,
   },
   templateNameEn: {
-    fontSize: 12,
+    fontSize: Typography.fontSize.xs,
     color: Colors.textMuted,
     marginTop: 2,
   },
@@ -154,12 +154,12 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.divider,
   },
   questionText: {
-    fontSize: 13,
+    fontSize: Typography.fontSize.sm,
     color: Colors.textSecondary,
     marginBottom: 4,
   },
   moreText: {
-    fontSize: 12,
+    fontSize: Typography.fontSize.xs,
     color: Colors.primary,
     marginTop: 4,
   },

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../context/ThemeProvider';
-import { Layout } from '../constants';
+import { Layout, Typography } from '../constants';
 
 export type ThemedAlertAction = {
   text: string;
@@ -80,12 +80,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.semibold,
     marginBottom: Layout.spacing.sm,
   },
   message: {
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
     lineHeight: 20,
     marginBottom: Layout.spacing.lg,
   },
@@ -110,8 +110,8 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   actionText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
   },
 });
 

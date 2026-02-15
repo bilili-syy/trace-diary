@@ -25,7 +25,7 @@ import JSZip from 'jszip';
 import { SettingsItem, PinInput, MoodChart, ThemedAlert } from '../components';
 import { useDiary, useAuth } from '../context';
 import { useTheme } from '../context/ThemeProvider';
-import { Layout } from '../constants';
+import { Layout, Typography } from '../constants';
 import { ExportData, MainTabParamList } from '../types';
 import { isValidPinFormat } from '../utils/cryptoUtils';
 import { readImageAsBase64, writeImageFromBase64 } from '../utils/imageStorage';
@@ -888,36 +888,39 @@ export function SettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: Layout.spacing.md, paddingVertical: Layout.spacing.md },
-  title: { fontSize: 24, fontWeight: 'bold' },
+  title: { fontSize: Typography.fontSize['2xl'], fontWeight: Typography.fontWeight.bold },
   content: { flex: 1 },
   scrollContent: { paddingHorizontal: Layout.spacing.md, paddingBottom: 100 },
   statsCard: {
     borderRadius: Layout.borderRadius.lg,
-    padding: Layout.spacing.md,
+    paddingVertical: Layout.spacing.md,
+    paddingHorizontal: Layout.spacing.lg,
     marginTop: Layout.spacing.sm,
   },
-  statsTitle: { fontSize: 16, fontWeight: '600', marginBottom: Layout.spacing.md },
-  statsRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
+  statsTitle: {
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.semibold,
+    marginBottom: Layout.spacing.md,
+  },
+  statsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   statItem: { alignItems: 'center', flex: 1 },
-  statValue: { fontSize: 24, fontWeight: 'bold' },
-  statLabel: { fontSize: 12, marginTop: 4 },
-  statDivider: { width: 1, height: 40 },
+  statValue: { fontSize: Typography.fontSize['2xl'], fontWeight: Typography.fontWeight.bold },
+  statLabel: { fontSize: Typography.fontSize.xs, marginTop: Layout.spacing.xs / 2 },
+  statDivider: { width: 1, height: Layout.spacing.xl },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
     marginTop: Layout.spacing.lg,
     marginBottom: Layout.spacing.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
   },
   section: { borderRadius: Layout.borderRadius.lg, overflow: 'hidden' },
   divider: { height: 1, marginHorizontal: Layout.spacing.md },
   colorModeContainer: { padding: Layout.spacing.md },
   colorModeHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: Layout.spacing.sm, gap: Layout.spacing.sm },
-  colorModeTitle: { fontSize: 16 },
+  colorModeTitle: { fontSize: Typography.fontSize.base },
   colorModeOptions: { flexDirection: 'row', gap: Layout.spacing.sm },
   colorModeOption: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: Layout.spacing.sm, borderRadius: Layout.borderRadius.md, gap: 6 },
-  colorModeLabel: { fontSize: 13 },
+  colorModeLabel: { fontSize: Typography.fontSize.sm },
   pinModalContainer: { flex: 1 },
   pinModalHeader: {
     flexDirection: 'row',
@@ -926,7 +929,7 @@ const styles = StyleSheet.create({
     paddingVertical: Layout.spacing.sm,
   },
   closeButton: { padding: Layout.spacing.sm },
-  closeButtonText: { fontSize: 16 },
+  closeButtonText: { fontSize: Typography.fontSize.base },
   themeModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   modalBackdrop: { flex: 1 },
   themeModalContent: {
@@ -941,7 +944,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Layout.spacing.lg,
   },
-  themeModalTitle: { fontSize: 18, fontWeight: '600' },
+  themeModalTitle: { fontSize: Typography.fontSize.lg, fontWeight: Typography.fontWeight.semibold },
   tagPresetInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -953,7 +956,7 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: Layout.borderRadius.md,
     paddingHorizontal: Layout.spacing.md,
-    fontSize: 16,
+    fontSize: Typography.fontSize.base,
   },
   tagPresetAddButton: {
     paddingHorizontal: Layout.spacing.md,
@@ -961,8 +964,8 @@ const styles = StyleSheet.create({
     borderRadius: Layout.borderRadius.md,
   },
   tagPresetAddButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
     color: '#FFF',
   },
   tagPresetList: {
@@ -979,11 +982,11 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tagPresetText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
   },
   tagPresetEmpty: {
-    fontSize: 13,
+    fontSize: Typography.fontSize.sm,
     lineHeight: 18,
   },
   themeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
@@ -1005,7 +1008,7 @@ const styles = StyleSheet.create({
   },
   themePreviewCard: { width: '60%', height: '50%', borderRadius: 6, justifyContent: 'center', alignItems: 'center' },
   themePreviewDot: { width: 16, height: 16, borderRadius: 8 },
-  themeName: { fontSize: 12, marginTop: 6, fontWeight: '500' },
+  themeName: { fontSize: Typography.fontSize.xs, marginTop: 6, fontWeight: Typography.fontWeight.medium },
   themeCheck: {
     position: 'absolute',
     top: 4,
@@ -1036,7 +1039,7 @@ const styles = StyleSheet.create({
     borderRadius: Layout.borderRadius.md,
     alignItems: 'center',
   },
-  saveButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+  saveButtonText: { color: '#FFFFFF', fontSize: Typography.fontSize.base, fontWeight: Typography.fontWeight.semibold },
   aboutModalContent: {
     margin: Layout.spacing.lg,
     borderRadius: Layout.borderRadius.lg,
@@ -1059,15 +1062,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   aboutSubtitle: {
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
     marginTop: 2,
   },
   aboutSlogan: {
-    fontSize: 13,
+    fontSize: Typography.fontSize.sm,
     marginTop: Layout.spacing.sm,
   },
   aboutDescription: {
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
     lineHeight: 22,
     textAlign: 'center',
     paddingHorizontal: Layout.spacing.md,
@@ -1077,8 +1080,8 @@ const styles = StyleSheet.create({
     marginVertical: Layout.spacing.lg,
   },
   aboutSectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.semibold,
     marginBottom: Layout.spacing.sm,
     textTransform: 'uppercase',
   },
@@ -1101,11 +1104,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   aboutContactLabel: {
-    fontSize: 12,
+    fontSize: Typography.fontSize.xs,
   },
   aboutContactValue: {
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
     marginTop: 2,
   },
   aboutCloseButton: {
@@ -1116,8 +1119,8 @@ const styles = StyleSheet.create({
   },
   aboutCloseButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
   },
 });
 

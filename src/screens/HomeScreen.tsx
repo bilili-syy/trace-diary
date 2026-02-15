@@ -19,7 +19,7 @@ import { Feather } from '@expo/vector-icons';
 import { DiaryCard, ThemedAlert } from '../components';
 import { useDiary } from '../context';
 import { useTheme } from '../context/ThemeProvider';
-import { Layout, MOOD_OPTIONS, WEATHER_OPTIONS } from '../constants';
+import { Layout, Typography, MOOD_OPTIONS, WEATHER_OPTIONS } from '../constants';
 import { RootStackParamList, MainTabParamList, DiaryEntry } from '../types';
 import { formatDateDisplay } from '../utils/dateUtils';
 import { getOnboardingDone, setOnboardingDone } from '../api/storage';
@@ -159,7 +159,7 @@ export function HomeScreen() {
 
     return (
       <TouchableOpacity 
-        style={[styles.thisDayCard, { backgroundColor: colors.primary + '10', borderLeftColor: colors.primary }]}
+        style={[styles.thisDayCard, { backgroundColor: colors.primary + '10', borderLeftColor: colors.primary, borderColor: colors.primary + '22' }]}
         onPress={() => handleCardPress(latestEntry)}
         activeOpacity={0.7}
       >
@@ -279,7 +279,7 @@ export function HomeScreen() {
         </View>
       </View>
       <View style={styles.searchRow}>
-        <View style={[styles.searchContainer, { backgroundColor: colors.cardBackground }]}>
+        <View style={[styles.searchContainer, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
           <Feather name="search" size={20} color={colors.textMuted} style={styles.searchIcon} />
           <TextInput
             style={[styles.searchInput, { color: colors.textPrimary }]}
@@ -298,7 +298,7 @@ export function HomeScreen() {
           )}
         </View>
         <TouchableOpacity 
-          style={[styles.filterButton, { backgroundColor: hasActiveFilters ? colors.primary : colors.cardBackground }]}
+          style={[styles.filterButton, { backgroundColor: hasActiveFilters ? colors.primary : colors.cardBackground, borderColor: colors.border }]}
           onPress={() => setShowFilters(!showFilters)}
         >
           <Feather name="filter" size={20} color={hasActiveFilters ? '#FFF' : colors.textPrimary} />
@@ -413,12 +413,12 @@ const styles = StyleSheet.create({
     paddingVertical: Layout.spacing.md,
   },
   greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: Typography.fontSize['2xl'],
+    fontWeight: Typography.fontWeight.bold,
   },
   date: {
-    fontSize: 14,
-    marginTop: 4,
+    fontSize: Typography.fontSize.sm,
+    marginTop: Layout.spacing.xs / 2,
   },
   searchButton: {
     width: 44,
@@ -439,13 +439,14 @@ const styles = StyleSheet.create({
     borderRadius: Layout.borderRadius.md,
     paddingHorizontal: Layout.spacing.sm,
     height: 44,
+    borderWidth: 1,
   },
   searchIcon: {
     marginRight: Layout.spacing.sm,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: Typography.fontSize.base,
     height: 44,
   },
   searchCloseButton: {
@@ -464,6 +465,7 @@ const styles = StyleSheet.create({
     borderRadius: Layout.borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
   },
   filtersContainer: {
     paddingBottom: Layout.spacing.sm,
@@ -475,7 +477,7 @@ const styles = StyleSheet.create({
     gap: Layout.spacing.xs,
   },
   filterLabel: {
-    fontSize: 12,
+    fontSize: Typography.fontSize.xs,
     marginRight: Layout.spacing.xs,
   },
   filterChip: {
@@ -494,7 +496,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   filterChipText: {
-    fontSize: 12,
+    fontSize: Typography.fontSize.xs,
   },
   clearFilters: {
     flexDirection: 'row',
@@ -504,14 +506,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   clearFiltersText: {
-    fontSize: 12,
+    fontSize: Typography.fontSize.xs,
   },
   noResultContainer: {
     paddingVertical: Layout.spacing.xl,
     alignItems: 'center',
   },
   noResultText: {
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
   },
   listContent: {
     paddingBottom: 100,
@@ -534,11 +536,11 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.md,
   },
   onboardingTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.semibold,
   },
   onboardingSkip: {
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
   },
   onboardingProgress: {
     flexDirection: 'row',
@@ -551,13 +553,13 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   onboardingStepTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.bold,
     marginBottom: Layout.spacing.sm,
   },
   onboardingStepDesc: {
-    fontSize: 14,
-    lineHeight: 22,
+    fontSize: Typography.fontSize.sm,
+    lineHeight: Math.round(Typography.fontSize.sm * Typography.lineHeight.relaxed),
     marginBottom: Layout.spacing.lg,
   },
   onboardingAction: {
@@ -568,8 +570,8 @@ const styles = StyleSheet.create({
   },
   onboardingActionText: {
     color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
   },
   onboardingFooter: {
     flexDirection: 'row',
@@ -582,13 +584,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   onboardingNavText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
   },
   onboardingNavTextPrimary: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
   },
   thisDayCard: {
     marginHorizontal: Layout.spacing.md,
@@ -596,6 +598,7 @@ const styles = StyleSheet.create({
     padding: Layout.spacing.md,
     borderRadius: Layout.borderRadius.lg,
     borderLeftWidth: 4,
+    borderWidth: 1,
   },
   thisDayHeader: {
     flexDirection: 'row',
@@ -603,17 +606,17 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.sm,
   },
   thisDayTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
     marginLeft: Layout.spacing.sm,
   },
   thisDayYear: {
-    fontSize: 12,
+    fontSize: Typography.fontSize.xs,
     marginLeft: Layout.spacing.sm,
   },
   thisDayContent: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: Typography.fontSize.sm,
+    lineHeight: Math.round(Typography.fontSize.sm * Typography.lineHeight.normal),
   },
   emptyContainer: {
     flex: 1,
@@ -630,14 +633,14 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.lg,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.semibold,
     marginBottom: Layout.spacing.sm,
   },
   emptySubtitle: {
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: Math.round(Typography.fontSize.sm * Typography.lineHeight.relaxed),
     marginBottom: Layout.spacing.lg,
   },
   emptyButton: {
@@ -647,8 +650,8 @@ const styles = StyleSheet.create({
   },
   emptyButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
   },
 });
 

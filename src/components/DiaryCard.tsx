@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { DiaryEntry } from '../types';
-import { Colors, Layout } from '../constants';
+import { Colors, Layout, Typography } from '../constants';
 import { useTheme } from '../context/ThemeProvider';
 import { formatDateDisplay, formatWeekday } from '../utils/dateUtils';
 import { WEATHER_OPTIONS } from '../constants/Styles';
@@ -109,15 +109,16 @@ export function DiaryCard({ entry, onPress, onLongPress }: DiaryCardProps) {
 const styles = StyleSheet.create({
   card: {
     borderRadius: Layout.borderRadius.lg,
-    padding: Layout.spacing.md,
+    paddingVertical: Layout.spacing.md,
+    paddingHorizontal: Layout.spacing.md,
     marginHorizontal: Layout.spacing.md,
     marginVertical: Layout.spacing.xs,
     borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
   },
   header: {
     flexDirection: 'row',
@@ -133,7 +134,7 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Layout.spacing.xs,
   },
   moodBadge: {
     width: 40,
@@ -144,18 +145,18 @@ const styles = StyleSheet.create({
     marginRight: Layout.spacing.sm,
   },
   mood: {
-    fontSize: 22,
+    fontSize: Typography.fontSize['2xl'],
   },
   dateContainer: {
     flexDirection: 'column',
   },
   date: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
   },
   weekday: {
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: Typography.fontSize.xs,
+    marginTop: Layout.spacing.xs / 4,
   },
   weatherBadge: {
     width: 32,
@@ -168,8 +169,8 @@ const styles = StyleSheet.create({
     marginVertical: Layout.spacing.sm,
   },
   contentText: {
-    fontSize: 14,
-    lineHeight: 21,
+    fontSize: Typography.fontSize.sm,
+    lineHeight: Math.round(Typography.fontSize.sm * Typography.lineHeight.relaxed),
   },
   imagesRow: {
     flexDirection: 'row',
@@ -197,14 +198,14 @@ const styles = StyleSheet.create({
   },
   moreText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: Layout.spacing.xs,
     marginTop: Layout.spacing.sm,
     paddingTop: Layout.spacing.sm,
     borderTopWidth: 1,
@@ -212,14 +213,14 @@ const styles = StyleSheet.create({
   metaTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: Layout.spacing.sm,
+    paddingVertical: Layout.spacing.xs / 2,
     borderRadius: 12,
-    gap: 4,
+    gap: Layout.spacing.xs / 2,
   },
   metaText: {
-    fontSize: 11,
-    fontWeight: '500',
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.medium,
   },
 });
 

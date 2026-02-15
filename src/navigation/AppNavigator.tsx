@@ -33,7 +33,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
 
   return (
     <View style={[styles.tabBarContainer, { paddingBottom: Math.max(insets.bottom, 10) }]}>
-      <View style={[styles.tabBar, { backgroundColor: colors.tabBarBackground }]}>
+      <View style={[styles.tabBar, { backgroundColor: colors.tabBarBackground, borderColor: colors.border }]}>
         {state.routes.map((route: any, index: number) => {
           const { options } = descriptors[route.key];
           const isFocused = state.index === index;
@@ -159,15 +159,16 @@ const styles = StyleSheet.create({
     height: Layout.tabBar.height,
     alignItems: 'center',
     justifyContent: 'space-around',
+    borderWidth: 1,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.08,
+        shadowRadius: 16,
       },
       android: {
-        elevation: 8,
+        elevation: 5,
       },
     }),
   },

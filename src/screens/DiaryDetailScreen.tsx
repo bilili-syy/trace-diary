@@ -22,7 +22,7 @@ import * as Sharing from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
 import { useDiary } from '../context';
 import { useTheme } from '../context/ThemeProvider';
-import { Colors, Layout, WEATHER_OPTIONS } from '../constants';
+import { Colors, Layout, Typography, WEATHER_OPTIONS } from '../constants';
 import { RootStackParamList } from '../types';
 import { formatDateDisplay, formatWeekday } from '../utils/dateUtils';
 import { getImageUri } from '../utils/imageStorage';
@@ -160,20 +160,20 @@ export function DiaryDetailScreen() {
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.cardBackground} />
       
       <View style={[styles.header, { borderBottomColor: colors.divider }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerButton}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.headerButton, { backgroundColor: colors.inputBackground }]}>
           <Feather name="arrow-left" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerActions}>
-          <TouchableOpacity onPress={() => setShowMarkdown(!showMarkdown)} style={styles.headerButton}>
+          <TouchableOpacity onPress={() => setShowMarkdown(!showMarkdown)} style={[styles.headerButton, { backgroundColor: colors.inputBackground }]}>
             <Feather name={showMarkdown ? 'eye' : 'eye-off'} size={20} color={colors.textPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleExportAsImage} style={styles.headerButton}>
+          <TouchableOpacity onPress={handleExportAsImage} style={[styles.headerButton, { backgroundColor: colors.inputBackground }]}>
             <Feather name="image" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleEdit} style={styles.headerButton}>
+          <TouchableOpacity onPress={handleEdit} style={[styles.headerButton, { backgroundColor: colors.inputBackground }]}>
             <Feather name="edit-2" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleDelete} style={styles.headerButton}>
+          <TouchableOpacity onPress={handleDelete} style={[styles.headerButton, { backgroundColor: colors.error + '12' }]}>
             <Feather name="trash-2" size={20} color={colors.error} />
           </TouchableOpacity>
         </View>
@@ -400,17 +400,20 @@ const styles = StyleSheet.create({
   headerButton: {
     width: 44,
     height: 44,
+    borderRadius: Layout.borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerActions: {
     flexDirection: 'row',
+    gap: Layout.spacing.xs / 2,
   },
   content: {
     flex: 1,
   },
   scrollContent: {
     padding: Layout.spacing.md,
+    paddingBottom: Layout.spacing.xxl,
   },
   metaSection: {
     marginBottom: Layout.spacing.lg,
@@ -421,19 +424,19 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.md,
   },
   mood: {
-    fontSize: 48,
+    fontSize: Typography.fontSize['5xl'],
     marginRight: Layout.spacing.md,
   },
   dateInfo: {
     flex: 1,
   },
   date: {
-    fontSize: 22,
-    fontWeight: '600',
+    fontSize: Typography.fontSize['2xl'],
+    fontWeight: Typography.fontWeight.semibold,
   },
   weekday: {
-    fontSize: 14,
-    marginTop: 4,
+    fontSize: Typography.fontSize.sm,
+    marginTop: Layout.spacing.xs / 2,
   },
   metaRow: {
     flexDirection: 'row',
@@ -444,18 +447,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: Layout.spacing.lg,
-    marginBottom: 4,
+    marginBottom: Layout.spacing.xs / 2,
   },
   metaText: {
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
     marginLeft: 6,
   },
   contentSection: {
     marginBottom: Layout.spacing.lg,
   },
   contentText: {
-    fontSize: 16,
-    lineHeight: 28,
+    fontSize: Typography.fontSize.base,
+    lineHeight: Math.round(Typography.fontSize.base * Typography.lineHeight.relaxed),
   },
   imageSection: {
     marginBottom: Layout.spacing.lg,
@@ -514,7 +517,7 @@ const styles = StyleSheet.create({
   },
   imageCounterText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
   },
   emptyContainer: {
     flex: 1,
@@ -522,7 +525,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: Typography.fontSize.base,
   },
   exportContainer: {
     padding: Layout.spacing.md,
@@ -530,17 +533,17 @@ const styles = StyleSheet.create({
   tagsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: Layout.spacing.xs,
     marginTop: Layout.spacing.sm,
   },
   tag: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: Layout.spacing.sm,
+    paddingVertical: Layout.spacing.xs / 2,
     borderRadius: 12,
   },
   tagText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.medium,
   },
   exportImagesSection: {
     marginBottom: Layout.spacing.md,
@@ -548,7 +551,7 @@ const styles = StyleSheet.create({
   exportImagesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: Layout.spacing.xs - 2,
   },
   exportImageWrapper: {
     width: '32%',
@@ -574,8 +577,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   exportBrand: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.medium,
   },
 });
 

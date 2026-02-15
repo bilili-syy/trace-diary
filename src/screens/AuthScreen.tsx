@@ -5,7 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { PinInput } from '../components';
 import { useAuth } from '../context';
 import { useTheme } from '../context/ThemeProvider';
-import { Layout } from '../constants';
+import { Layout, Typography } from '../constants';
 
 export function AuthScreen() {
   const { state, authenticate, authenticateWithPin } = useAuth();
@@ -75,12 +75,12 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.md,
   },
   appName: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 4,
+    fontSize: Typography.fontSize['3xl'],
+    fontWeight: Typography.fontWeight.bold,
+    marginBottom: Layout.spacing.xs / 2,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: Typography.fontSize.base,
   },
 });
 
