@@ -91,7 +91,7 @@ src/
 
 ```bash
 # 克隆仓库
-git clone https://github.com/pilipili-hash/trace-diary.git
+git clone https://github.com/bilili-syy/trace-diary.git
 cd trace-diary
 
 # 安装依赖
@@ -137,6 +137,10 @@ eas build --platform android --profile production
 - 导出为 ZIP 文件，用户完全掌控数据
 - 零网络权限，不发送任何数据
 
+## 演示视频
+
+[![Bilibili](https://img.shields.io/badge/Bilibili-应用介绍-FB7299?logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1sgFbzuEss/)
+
 ## 贡献
 
 欢迎提交 Issue 和 Pull Request。
@@ -146,6 +150,16 @@ eas build --platform android --profile production
 3. 提交更改 (`git commit -m 'Add my feature'`)
 4. 推送到分支 (`git push origin feature/my-feature`)
 5. 创建 Pull Request
+
+## 捐赠
+
+如果觉得这个项目对你有帮助，欢迎请作者喝杯咖啡 :)
+
+<p align="center">
+  <img src="donate/wechat-pay.png" width="250" alt="微信赞赏" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="donate/alipay-pay.jpg" width="250" alt="支付宝赞赏" />
+</p>
 
 ## 许可证
 

@@ -848,20 +848,6 @@ export function SettingsScreen() {
               <Feather name="chevron-right" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.aboutContactItem, { backgroundColor: colors.background }]}
-              onPress={() => Linking.openURL('https://www.bilibili.com/video/BV1sgFbzuEss/')}
-            >
-              <View style={[styles.aboutContactIcon, { backgroundColor: '#FB7299' + '20' }]}>
-                <Text style={{ fontSize: 18 }}>B</Text>
-              </View>
-              <View style={styles.aboutContactInfo}>
-                <Text style={[styles.aboutContactLabel, { color: colors.textSecondary }]}>哔哩哔哩</Text>
-                <Text style={[styles.aboutContactValue, { color: colors.textPrimary }]}>应用介绍视频</Text>
-              </View>
-              <Feather name="chevron-right" size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-
             <TouchableOpacity 
               style={[styles.aboutCloseButton, { backgroundColor: colors.primary }]}
               onPress={() => setAboutModalVisible(false)}
