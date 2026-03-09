@@ -1,6 +1,7 @@
 import { StyleSheet, Platform } from 'react-native';
 import Colors from './Colors';
 import Layout, { Typography } from './Layout';
+import type { TemplateQuestion } from '../types';
 
 // 全局样式常量
 export const GlobalStyles = StyleSheet.create({
@@ -185,13 +186,6 @@ export const WEATHER_OPTIONS = [
   { id: 'windy', icon: 'wind', label: '大风' },
   { id: 'stormy', icon: 'cloud-lightning', label: '雷暴' },
 ];
-
-// 日记模板
-export interface TemplateQuestion {
-  question: string;
-  placeholder: string;
-  format: (answer: string) => string;
-}
 
 export const DIARY_TEMPLATES = [
   {

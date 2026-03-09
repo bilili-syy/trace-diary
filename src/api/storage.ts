@@ -58,7 +58,7 @@ const STORAGE_KEYS = {
 
 // ============ 日记条目相关 ============
 
-// 获取所有日记条�?
+// 获取所有日记条目
 export const getAllEntries = (): DiaryEntry[] => {
   try {
     const data = getStorage().getString(STORAGE_KEYS.DIARY_ENTRIES);
@@ -70,7 +70,7 @@ export const getAllEntries = (): DiaryEntry[] => {
   }
 };
 
-// 保存所有日记条�?
+// 保存所有日记条目
 export const saveAllEntries = (entries: DiaryEntry[]): void => {
   try {
     getStorage().set(STORAGE_KEYS.DIARY_ENTRIES, JSON.stringify(entries));
@@ -105,12 +105,12 @@ export const deleteEntry = (id: string): void => {
   saveAllEntries(filtered);
 };
 
-// 按日期获取日�?
+// 按日期获取日记
 export const getEntriesByDate = (dateId: string): DiaryEntry | null => {
   return getEntryById(dateId);
 };
 
-// 获取指定月份的所有日�?
+// 获取指定月份的所有日记
 export const getEntriesByMonth = (year: number, month: number): DiaryEntry[] => {
   const entries = getAllEntries();
   return entries.filter((entry) => {
@@ -121,27 +121,27 @@ export const getEntriesByMonth = (year: number, month: number): DiaryEntry[] => 
 
 // ============ 应用设置相关 ============
 
-// 获取应用锁状�?
+// 获取应用锁状态
 export const getAppLockEnabled = (): boolean => {
   return getStorage().getBoolean(STORAGE_KEYS.IS_APP_LOCK_ENABLED) ?? false;
 };
 
-// 设置应用锁状�?
+// 设置应用锁状态
 export const setAppLockEnabled = (enabled: boolean): void => {
   getStorage().set(STORAGE_KEYS.IS_APP_LOCK_ENABLED, enabled);
 };
 
-// 获取 PIN 码哈�?
+// 获取 PIN 码哈希
 export const getPinHash = (): string | null => {
   return getStorage().getString(STORAGE_KEYS.PIN_HASH) ?? null;
 };
 
-// 设置 PIN 码哈�?
+// 设置 PIN 码哈希
 export const setPinHash = (hash: string): void => {
   getStorage().set(STORAGE_KEYS.PIN_HASH, hash);
 };
 
-// 清除 PIN �?
+// 清除 PIN 码
 export const clearPin = (): void => {
   getStorage().delete(STORAGE_KEYS.PIN_HASH);
 };
@@ -214,8 +214,12 @@ export const getTagPresets = (): string[] => {
       ? parsed.filter((t) => typeof t === 'string' && t.trim().length > 0)
       : [];
     if (cleaned.length === 0) return [];
-    const looksCorrupted = cleaned.every((tag) => tag.includes('?') || tag.includes('\uFFFD'));
-    if (looksCorrupted) {
+    const hasCorrupted = cleaned.some((tag) => 
+      tag.includes('\uFFFD') || 
+      /[\x00-\x08\x0B\x0C\x0E-\x1F]/.test(tag) ||
+      (tag.length > 1 && [...tag].filter(c => c === '?').length > tag.length / 2)
+    );
+    if (hasCorrupted) {
       getStorage().set(STORAGE_KEYS.TAG_PRESETS, JSON.stringify(DEFAULT_TAG_PRESETS));
       return [...DEFAULT_TAG_PRESETS];
     }
@@ -232,7 +236,7 @@ export const setTagPresets = (tags: string[]): void => {
 
 // ============ 导入导出相关 ============
 
-// 导出所有数�?
+// 导出所有数据
 export const exportAllData = (): ExportData => {
   const entries = getAllEntries();
   return {
@@ -257,7 +261,7 @@ export const importDataMerge = (data: ExportData): void => {
   saveAllEntries(mergedEntries);
 };
 
-// 清除所有数�?
+// 清除所有数据
 export const clearAllData = (): void => {
   getStorage().clearAll();
 };

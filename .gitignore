@@ -39,3 +39,13 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# setup scripts with secrets
+setup-github.ps1
+release.bat
+
+# AI collaboration config
+.ccb_config/
+
+# Internal design docs
+DESIGN_SYSTEM.md

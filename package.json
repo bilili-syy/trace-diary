@@ -14,10 +14,8 @@
     "@react-navigation/bottom-tabs": "^7.10.1",
     "@react-navigation/native": "^7.1.28",
     "@react-navigation/native-stack": "^7.11.0",
-    "@types/jszip": "^3.4.0",
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
-    "eas-cli": "^16.32.0",
     "expo": "~54.0.33",
     "expo-document-picker": "^14.0.8",
     "expo-file-system": "^19.0.21",
@@ -42,10 +40,10 @@
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
+    "@types/jszip": "^3.4.0",
     "@types/react": "~19.1.0",
     "babel-preset-expo": "^54.0.10",
     "patch-package": "^8.0.1",
     "typescript": "~5.9.2"
-  },
-  "private": true
+  }
 }
