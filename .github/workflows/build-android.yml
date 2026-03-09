@@ -1,4 +1,4 @@
-name: Build Release (Android + iOS)
+name: Build Android Release
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,9 +43,6 @@ jobs:
       - name: Resolve Android artifact
         id: android_artifact
         run: |
-          echo "=== build_android.json content ==="
-          cat build_android.json || echo "File not found"
-          echo "=== End of build_android.json ==="
           URL=$(node -e '
             const fs = require("fs");
             const data = JSON.parse(fs.readFileSync("build_android.json", "utf8"));
@@ -56,7 +53,6 @@ jobs:
           if [ -z "$URL" ]; then
             echo "URL not found in build output, fetching from EAS..."
             eas build:view ${{ steps.build_android.outputs.build_id }} --json > build_android_view.json
-            cat build_android_view.json
             URL=$(node -e '
               const fs = require("fs");
               const data = JSON.parse(fs.readFileSync("build_android_view.json", "utf8"));
@@ -81,70 +77,10 @@ jobs:
           path: trace-android.apk
           retention-days: 30
 
-      - name: Build iOS (EAS)
-        id: build_ios
-        continue-on-error: true
-        run: |
-          eas build --platform ios --profile preview-ios --non-interactive --wait --json > build_ios.json
-          BUILD_ID=$(node -e 'const fs=require("fs");const d=JSON.parse(fs.readFileSync("build_ios.json","utf8"));const b=Array.isArray(d)?d[0]:d;console.log(b.id);')
-          echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
-
-      - name: Resolve iOS artifact
-        if: steps.build_ios.outcome == 'success'
-        id: ios_artifact
-        run: |
-          echo "=== build_ios.json content ==="
-          cat build_ios.json || echo "File not found"
-          echo "=== End of build_ios.json ==="
-          URL=$(node -e '
-            const fs = require("fs");
-            const data = JSON.parse(fs.readFileSync("build_ios.json", "utf8"));
-            const root = Array.isArray(data) ? data[0] : data;
-            const url = root.artifacts?.buildUrl || root.buildUrl || root.applicationArchiveUrl || "";
-            if (url) console.log(url);
-          ')
-          if [ -z "$URL" ]; then
-            echo "URL not found in build output, fetching from EAS..."
-            eas build:view ${{ steps.build_ios.outputs.build_id }} --json > build_ios_view.json
-            cat build_ios_view.json
-            URL=$(node -e '
-              const fs = require("fs");
-              const data = JSON.parse(fs.readFileSync("build_ios_view.json", "utf8"));
-              const root = Array.isArray(data) ? data[0] : data;
-              const url = root.artifacts?.buildUrl || root.buildUrl || root.applicationArchiveUrl || "";
-              if (url) console.log(url);
-            ')
-          fi
-          if [ -z "$URL" ]; then
-            echo "[ERROR] iOS artifact URL not found"
-            exit 1
-          fi
-          echo "url=$URL" >> $GITHUB_OUTPUT
-
-      - name: Download iOS IPA
-        if: steps.build_ios.outcome == 'success'
-        run: curl -L "${{ steps.ios_artifact.outputs.url }}" -o trace-ios.ipa
-
-      - name: Upload iOS Artifact
-        if: steps.build_ios.outcome == 'success'
-        uses: actions/upload-artifact@v4
-        with:
-          name: trace-ios
-          path: trace-ios.ipa
-          retention-days: 30
-
-      - name: Upload Android To Release
+      - name: Upload To Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: trace-android.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload iOS To Release
-        if: startsWith(github.ref, 'refs/tags/') && steps.build_ios.outcome == 'success'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: trace-ios.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
