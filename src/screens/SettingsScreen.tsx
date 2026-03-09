@@ -833,31 +833,31 @@ export function SettingsScreen() {
             <View style={[styles.aboutDivider, { backgroundColor: colors.border }]} />
 
             <Text style={[styles.aboutSectionTitle, { color: colors.textSecondary }]}>开发者</Text>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.aboutContactItem, { backgroundColor: colors.background }]}
-              onPress={() => Linking.openURL('mqqwpa://im/chat?chat_type=wpa&uin=1075047189')}
+              onPress={() => Linking.openURL('https://github.com/bilili-syy/trace-diary')}
             >
-              <View style={[styles.aboutContactIcon, { backgroundColor: '#12B7F5' + '20' }]}>
-                <Text style={{ fontSize: 18 }}>Q</Text>
+              <View style={[styles.aboutContactIcon, { backgroundColor: '#24292e' + '20' }]}>
+                <Feather name="github" size={18} color="#24292e" />
               </View>
               <View style={styles.aboutContactInfo}>
-                <Text style={[styles.aboutContactLabel, { color: colors.textSecondary }]}>QQ</Text>
-                <Text style={[styles.aboutContactValue, { color: colors.textPrimary }]}>1075047189</Text>
+                <Text style={[styles.aboutContactLabel, { color: colors.textSecondary }]}>GitHub</Text>
+                <Text style={[styles.aboutContactValue, { color: colors.textPrimary }]}>bilili-syy/trace-diary</Text>
               </View>
               <Feather name="chevron-right" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.aboutContactItem, { backgroundColor: colors.background }]}
-              onPress={() => Linking.openURL('https://space.bilibili.com')}
+              onPress={() => Linking.openURL('https://www.bilibili.com/video/BV1sgFbzuEss/')}
             >
               <View style={[styles.aboutContactIcon, { backgroundColor: '#FB7299' + '20' }]}>
                 <Text style={{ fontSize: 18 }}>B</Text>
               </View>
               <View style={styles.aboutContactInfo}>
                 <Text style={[styles.aboutContactLabel, { color: colors.textSecondary }]}>哔哩哔哩</Text>
-                <Text style={[styles.aboutContactValue, { color: colors.textPrimary }]}>格鲁德沙皇</Text>
+                <Text style={[styles.aboutContactValue, { color: colors.textPrimary }]}>应用介绍视频</Text>
               </View>
               <Feather name="chevron-right" size={20} color={colors.textSecondary} />
             </TouchableOpacity>

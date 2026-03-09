@@ -101,6 +101,16 @@ export function DiaryCard({ entry, onPress, onLongPress }: DiaryCardProps) {
             <Text style={[styles.metaText, { color: colors.primary }]}>{entryImages.length}</Text>
           </View>
         )}
+        {entry.tags && entry.tags.length > 0 && entry.tags.slice(0, 2).map((tag) => (
+          <View key={tag} style={[styles.metaTag, { backgroundColor: colors.primary + '12' }]}>
+            <Text style={[styles.metaText, { color: colors.primary }]}>#{tag}</Text>
+          </View>
+        ))}
+        {entry.tags && entry.tags.length > 2 && (
+          <View style={[styles.metaTag, { backgroundColor: colors.primary + '12' }]}>
+            <Text style={[styles.metaText, { color: colors.primary }]}>+{entry.tags.length - 2}</Text>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );

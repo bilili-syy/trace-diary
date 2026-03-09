@@ -24,6 +24,7 @@ import { RootStackParamList, MainTabParamList, DiaryEntry } from '../types';
 import { formatDateDisplay } from '../utils/dateUtils';
 import { getOnboardingDone, setOnboardingDone } from '../api/storage';
 import { useThemedAlert } from '../hooks';
+import { useDebouncedValue } from '../hooks/useDebounce';
 
 interface FilterState {
   mood: string | null;
@@ -42,6 +43,7 @@ export function HomeScreen() {
   const { colors, isDark } = useTheme();
   const { showAlert, alertConfig, hideAlert } = useThemedAlert();
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>({ mood: null, weather: null, tag: null });
   const [showOnboarding, setShowOnboarding] = useState(() => !getOnboardingDone());
@@ -64,10 +66,10 @@ export function HomeScreen() {
 
   const filteredEntries = useMemo(() => {
     let entries = state.entries;
-    
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      entries = entries.filter(entry => 
+
+    if (debouncedSearch.trim()) {
+      const query = debouncedSearch.toLowerCase();
+      entries = entries.filter(entry =>
         entry.content.toLowerCase().includes(query) ||
         entry.tags?.some(tag => tag.toLowerCase().includes(query))
       );
@@ -86,7 +88,7 @@ export function HomeScreen() {
     }
     
     return entries;
-  }, [state.entries, searchQuery, filters]);
+  }, [state.entries, debouncedSearch, filters]);
 
   const clearFilters = () => {
     setFilters({ mood: null, weather: null, tag: null });
@@ -313,9 +315,9 @@ export function HomeScreen() {
           data={filteredEntries}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          ListHeaderComponent={!searchQuery && !hasActiveFilters ? renderThisDaySection : null}
+          ListHeaderComponent={!debouncedSearch && !hasActiveFilters ? renderThisDaySection : null}
           ListEmptyComponent={
-            searchQuery || hasActiveFilters ? (
+            debouncedSearch || hasActiveFilters ? (
               <View style={styles.noResultContainer}>
                 <Text style={[styles.noResultText, { color: colors.textMuted }]}>未找到相关日记</Text>
               </View>
@@ -323,6 +325,9 @@ export function HomeScreen() {
           }
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
         />
       )}
 

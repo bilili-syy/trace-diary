@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   },
   headerActions: {
     flexDirection: 'row',
-    gap: Layout.spacing.xs / 2,
+    gap: Layout.spacing.xs,
   },
   content: {
     flex: 1,

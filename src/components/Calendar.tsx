@@ -2,14 +2,15 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import {
-  startOfMonth, 
-  endOfMonth, 
-  eachDayOfInterval, 
-  format, 
-  addMonths, 
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  format,
+  addMonths,
   subMonths,
-  isSameMonth,
   isSameDay,
+  isAfter,
+  startOfDay,
   getDay,
 } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -67,6 +68,7 @@ export function Calendar({ entries, onDateSelect, selectedDate }: CalendarProps)
     const entry = entryMap.get(dateId);
     const isToday = isSameDay(day, new Date());
     const isSelected = selectedDate && isSameDay(day, selectedDate);
+    const isFuture = isAfter(startOfDay(day), startOfDay(new Date()));
     const hasEntry = !!entry;
     const moodColor = entry?.mood ? Colors.moodColors[entry.mood] : undefined;
 
@@ -76,17 +78,19 @@ export function Calendar({ entries, onDateSelect, selectedDate }: CalendarProps)
         style={[
           styles.dayCell,
           isToday && { backgroundColor: colors.primaryLight + '20', borderRadius: Layout.borderRadius.round },
-          isSelected && { backgroundColor: colors.primary, borderRadius: Layout.borderRadius.round },
+          isSelected && !isFuture && { backgroundColor: colors.primary, borderRadius: Layout.borderRadius.round },
         ]}
-        onPress={() => onDateSelect(day)}
-        activeOpacity={0.7}
+        onPress={() => !isFuture && onDateSelect(day)}
+        activeOpacity={isFuture ? 1 : 0.7}
+        disabled={isFuture}
       >
         <Text
           style={[
             styles.dayText,
             { color: colors.textPrimary },
+            isFuture && { color: colors.textMuted, opacity: 0.4 },
             isToday && { fontWeight: 'bold', color: colors.primary },
-            isSelected && { color: '#FFFFFF', fontWeight: 'bold' },
+            isSelected && !isFuture && { color: '#FFFFFF', fontWeight: 'bold' },
           ]}
         >
           {format(day, 'd')}
