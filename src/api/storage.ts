@@ -2,6 +2,7 @@ import { MMKV } from 'react-native-mmkv';
 import * as SecureStore from 'expo-secure-store';
 import CryptoJS from 'crypto-js';
 import { DiaryEntry, AppSettings, ExportData } from '../types';
+import { LEGACY_FALLBACK_ENCRYPTION_KEY, resolveFallbackEncryptionKey } from './storageKeyResolver';
 
 const STORAGE_KEY_NAME = 'mind-garden-encryption-key';
 let storage: MMKV;
@@ -30,11 +31,22 @@ export const initializeStorage = async (): Promise<void> => {
   } catch (error) {
     console.warn('SecureStore unavailable, using device-local fallback key:', error);
     const fallbackStore = new MMKV({ id: FALLBACK_KEY_STORAGE_ID });
-    encryptionKey = fallbackStore.getString(FALLBACK_KEY_FIELD) ?? null;
-    if (!encryptionKey) {
-      encryptionKey = generateEncryptionKey();
-      fallbackStore.set(FALLBACK_KEY_FIELD, encryptionKey);
-    }
+    encryptionKey = resolveFallbackEncryptionKey({
+      storedFallbackKey: fallbackStore.getString(FALLBACK_KEY_FIELD) ?? null,
+      hasLegacyFallbackData: () => {
+        try {
+          const legacyStore = new MMKV({
+            id: 'mind-garden-storage',
+            encryptionKey: LEGACY_FALLBACK_ENCRYPTION_KEY,
+          });
+          return legacyStore.getAllKeys().length > 0;
+        } catch {
+          return false;
+        }
+      },
+      generateKey: generateEncryptionKey,
+      persistFallbackKey: (key) => fallbackStore.set(FALLBACK_KEY_FIELD, key),
+    });
   }
 
   storage = new MMKV({

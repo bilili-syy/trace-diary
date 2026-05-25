@@ -25,6 +25,7 @@ expo-env.d.ts
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+.tmp/
 
 # macOS
 .DS_Store
@@ -46,6 +47,7 @@ release.bat
 
 # AI collaboration config
 .ccb_config/
+.claude/
 
 # Internal design docs
 DESIGN_SYSTEM.md
