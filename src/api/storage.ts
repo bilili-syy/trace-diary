@@ -1,7 +1,7 @@
 import { MMKV } from 'react-native-mmkv';
 import * as SecureStore from 'expo-secure-store';
 import { DiaryEntry, AppSettings, ExportData } from '../types';
-import { generateMmkvEncryptionKey, isValidMmkvEncryptionKey } from './mmkvEncryption';
+import { generateMmkvEncryptionKey } from './mmkvEncryption';
 import { LEGACY_FALLBACK_ENCRYPTION_KEY, resolveFallbackEncryptionKey } from './storageKeyResolver';
 
 const STORAGE_KEY_NAME = 'mind-garden-encryption-key';
@@ -19,7 +19,7 @@ export const initializeStorage = async (): Promise<void> => {
   try {
     encryptionKey = await SecureStore.getItemAsync(STORAGE_KEY_NAME);
 
-    if (!isValidMmkvEncryptionKey(encryptionKey)) {
+    if (!encryptionKey) {
       encryptionKey = generateMmkvEncryptionKey();
       await SecureStore.setItemAsync(STORAGE_KEY_NAME, encryptionKey);
     }
